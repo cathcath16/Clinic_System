@@ -513,8 +513,63 @@ tbody tr { background: transparent !important; }
     .step-indicator { display: none; }
 }
 
+
+/* --- PRESCRIPTION PRINT AREA (A4 Bond Paper) --- */
 .prescription-print-area {
-    display: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #e9ecef;
+    padding: 32px 0;
+}
+
+.prescription-a4 {
+    background: #fff;
+    width: 210mm;
+    min-height: 297mm;
+    max-width: 100vw;
+    box-shadow: 0 0 16px 2px rgba(0,0,0,0.13);
+    border: 2px solid #1f3a6d;
+    border-radius: 8px;
+    margin: auto;
+    padding: 32mm 22mm 28mm 22mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    position: relative;
+}
+
+@media print {
+    @page { size: A4 portrait; margin: 0; }
+    html, body { width: 210mm; height: 297mm; margin: 0; padding: 0; background: #fff !important; }
+    body * { visibility: hidden; }
+    #rxPrintArea.print-active, #rxPrintArea.print-active * { visibility: visible; }
+    #rxPrintArea.print-active {
+        display: flex !important;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 0; left: 0;
+        width: 210mm;
+        height: 297mm;
+        min-height: unset;
+        background: #fff !important;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+    .prescription-a4 {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        max-width: unset;
+        border: 2px solid #1f3a6d !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 32mm 22mm 28mm 22mm !important;
+        background: #fff !important;
+    }
 }
 
 .prescription-page {
