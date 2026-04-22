@@ -1351,32 +1351,22 @@ function renderPrescriptionPreview() {
     const preview = document.getElementById('rxPrintArea');
     if (!preview) return;
     const prescriptionId = generatePrescriptionId();
+    preview.className = 'prescription-print-area';
     preview.innerHTML = `
-        <div class="prescription-page">
-            <div class="prescription-top">
-                <div class="prescription-brand-left">
-                    <div class="brand-box brand-box-green">PPD Clinic</div>
-                    <div class="brand-tag">Connecting Healthcare to Everyone</div>
-                </div>
-                <div class="prescription-brand-right">
-                    <div class="brand-box brand-box-blue">TFD</div>
-                    <div class="brand-tag">TheFilipinoDoctor</div>
-                </div>
-            </div>
+        <div class="prescription-a4">
             <div class="prescription-doctor">
                 <div class="doctor-name">Val O. Acosta, MD</div>
                 <div class="doctor-title">General Practice</div>
-                <div class="doctor-clinic">Dr. Val Acosta Clinic</div>
-                <div class="doctor-location">Gusa<br>Cagayan De Oro City, Misamis Oriental</div>
+                <div class="doctor-location">Northern Bukidnon State College<br>Health Services Office<br>Kihare, Tankulan Manolo Fortich Bukidnon</div>
             </div>
             <div class="prescription-meta">
-                <div class="prescription-left">
+                <div class="prescription-top">
+                    <div><strong>Prescribed on:</strong> ${prescribedOn} PHT</div>
+                </div>
+                <div class="prescription-patient-info" style="margin-top:8px;">
                     <div><strong>Patient:</strong> ${fullName}</div>
                     <div><strong>Age:</strong> ${age} years old</div>
                     <div><strong>Gender:</strong> ${gender}</div>
-                </div>
-                <div class="prescription-right">
-                    <div><strong>Prescribed on:</strong> ${prescribedOn} PHT</div>
                 </div>
             </div>
             <div class="prescription-title">Rx</div>
@@ -1397,10 +1387,6 @@ function renderPrescriptionPreview() {
                     <div>PTR No.: 6540309</div>
                 </div>
             </div>
-            <div class="prescription-footer">
-                <div class="footer-note">Note to User: The information contained in this electronic prescription are those of the prescriber and do not constitute as an endorsement of the PPD Clinic. If any information is suspected to be manually or electronically altered, drugstores are advised to verify the original contents of the prescription. The prescriber and the creators of the PPD App will not be liable for any loss or damage whatsoever arising from the use of altered or tampered electronic prescriptions.</div>
-                <div class="footer-brand">Powered by The Filipino Doctor<br><span>For Philippines use only.</span></div>
-            </div>
         </div>
     `;
 }
@@ -1415,7 +1401,7 @@ function generatePrescriptionId() {
 function formatPrescriptionDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
     return date.toLocaleString('en-US', options);
 }
 
