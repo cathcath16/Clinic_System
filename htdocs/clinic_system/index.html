@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBSC Clinic System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="logo" width="40">
+        <div>
+            <h2>NBSC School Clinic System</h2>
+            <small>Employee Health Profile — FM-NBSC-HSO-001</small>
+        </div>
+    </div>
+    <div class="header-right">
+        <span id="stats-summary">Total: <span id="total-count">200</span> Employees</span>
+    </div>
+</header>
+
+<div class="cards">
+    <div class="card blue">
+        <i class="fas fa-users"></i>
+        <h1 id="count-total">200</h1>
+        <p>Total Employees</p>
+    </div>
+    <div class="card green">
+        <i class="fas fa-check-square"></i>
+        <h1 id="count-a">163</h1>
+        <p>Class A</p>
+        <small class="class-names" id="names-a">Mendoza, Daniel; Lopez, Emmanuel</small>
+    </div>
+    <div class="card yellow">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h1 id="count-b">24</h1>
+        <p>Class B</p>
+        <small class="class-names" id="names-b">(none)</small>
+    </div>
+    <div class="card red">
+        <i class="fas fa-circle"></i>
+        <h1 id="count-c">13</h1>
+        <p>Class C</p>
+        <small class="class-names" id="names-c">Aquino, Rhea</small>
+    </div>
+</div>
+
+<div class="dual-container">
+    <div class="table-container">
+        <div class="toolbar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, ID, occupation...">
+            </div>
+            <select id="occupationFilter">
+                <option value="All">Sort by</option>
+            </select>
+            <button id="addNewBtn" class="add-btn"><i class="fas fa-plus"></i> Add New Profile</button>
+            <button id="openConsultBtn" class="add-btn"><i class="fas fa-notes-medical"></i> Consultation Form</button>
+            <button id="openRxBtn" class="add-btn"><i class="fas fa-prescription-bottle-alt"></i> Add Prescription</button>
+            <button id="openCertBtn" class="add-btn"><i class="fas fa-file-medical"></i> Medical Certificate</button>
+            <button id="importBtn" class="add-btn" title="Import Scanned Form">
+                <i class="fas fa-file-import"></i> Import Scan
+            </button>
+            <button id="exportBtn" class="add-btn">
+                <i class="fas fa-file-export"></i> Export
+            </button>
+            <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none;">
+        </div>
+
+        <table id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Emp. ID</th>
+                    <th>Name</th>
+                    <th>Birthday</th>
+                    <th>Contact No.</th>
+                    <th>Religion</th>
+                    <th>Gender</th>
+                    <th>Age</th>
+                    <th>Occupation</th>
+                    <th>Civil Status</th>
+                    <th>Class</th>
+                    <th>Medical Condition</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+
+        <div id="undoBar" class="undo-bar" style="display:none;">
+            <span>Employee deleted.</span>
+            <button type="button" id="undoBtn" class="action-btn edit-btn">Undo</button>
+        </div>
+
+        <div class="pagination">
+            <span id="paginationInfo">Showing results</span>
+            <div class="pages" id="paginationPages"></div>
+        </div>
+    </div>
+</div>
+
+<!-- CONSULTATION MODAL -->
+<div id="consultModal" class="modal">
+    <div class="modal-content wide-modal">
+        <div class="modal-header">
+            <h3>Medical Consultation Form</h3>
+            <span class="close" id="closeConsultModal">&times;</span>
+        </div>
+        <div class="form-container">
+            <form id="consultationForm" class="consultation-form">
+                <div class="consult-grid">
+                    <div class="input-group">
+                        <label>Employee</label>
+                        <div class="select-search-group">
+                            <input type="search" id="consultEmployeeSearch" placeholder="Search employee..." list="consultEmployeeList" autocomplete="off">
+                            <datalist id="consultEmployeeList"></datalist>
+                            <input type="hidden" id="consultEmployeeId">
+                            <div id="consultEmployeeResults" class="search-results"></div>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Type</label>
+                        <select id="consultType">
+                            <option value="">-- select --</option>
+                            <option value="Non-Teaching">Non-Teaching</option>
+                            <option value="Teaching">Teaching</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Family Name</label>
+                        <input type="text" id="consultFamilyName">
+                    </div>
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <input type="text" id="consultFirstName">
+                    </div>
+                    <div class="input-group">
+                        <label>Middle Name</label>
+                        <input type="text" id="consultMiddleName">
+                    </div>
+                    <div class="input-group">
+                        <label>Sex</label>
+                        <select id="consultSex">
+                            <option value="">-- select --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Civil Status</label>
+                        <select id="consultCivilStatus">
+                            <option value="">-- select --</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Separated">Separated</option>
+                            <option value="Widow/Widower">Widow/Widower</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="consult-grid">
+                    <div class="input-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="consultPhone">
+                    </div>
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="number" id="consultAge" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Birthdate</label>
+                        <input type="date" id="consultBday">
+                    </div>
+                    <div class="input-group">
+                        <label>Height</label>
+                        <input type="text" id="consultHeight" placeholder="cm or ft">
+                    </div>
+                    <div class="input-group">
+                        <label>Weight</label>
+                        <input type="text" id="consultWeight" placeholder="kg or lbs">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Address</label>
+                        <input type="text" id="consultAddress">
+                    </div>
+                </div>
+                <div class="consult-grid">
+                    <div class="input-group">
+                        <label>Date</label>
+                        <input type="date" id="consultDate">
+                    </div>
+                    <div class="input-group">
+                        <label>Time</label>
+                        <input type="time" id="consultTime">
+                    </div>
+                    <div class="input-group">
+                        <label>BP</label>
+                        <input type="text" id="consultBP">
+                    </div>
+                    <div class="input-group">
+                        <label>HR</label>
+                        <input type="text" id="consultHR">
+                    </div>
+                    <div class="input-group">
+                        <label>RR</label>
+                        <input type="text" id="consultRR">
+                    </div>
+                    <div class="input-group">
+                        <label>Temp</label>
+                        <input type="text" id="consultTemp">
+                    </div>
+                </div>
+                <div class="consult-grid full-width">
+                    <div class="input-group full-width">
+                        <label>Chief Complaint / Findings</label>
+                        <textarea id="consultComplaint" rows="3"></textarea>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Treatment/Plan</label>
+                        <textarea id="consultPlan" rows="3"></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="save-btn">Save Consultation</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="addModal" class="modal">
+    <div class="modal-content wide-modal">
+        <div class="modal-header">
+            <h3>NBSC Employee Health Profile Form</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator" id="stepIndicator"></div>
+
+        <form id="addForm" class="modal-form">
+            <div class="form-container">
+
+                <!-- STEP 1: Personal Profile -->
+                <div class="form-section step active" data-step="1">
+                    <h4 class="section-title">I. Personal Profile</h4>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Emp ID <span class="req">*</span></label>
+                            <input type="text" id="newId" placeholder="Auto-generated" readonly required>
+                        </div>
+                        <div class="input-group">
+                            <label>Full Name <span class="req">*</span></label>
+                            <input type="text" id="newName" placeholder="Last Name, First Name, M.I." required>
+                        </div>
+                        <div class="input-group">
+                            <label>Birthday</label>
+                            <input type="date" id="newBday">
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Age/Sex <span class="req">*</span></label>
+                            <div class="flex-row">
+                                <input type="number" id="newAge" placeholder="Age" style="width: 40%;" required>
+                                <select id="newGender" style="width: 55%;">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Contact Number</label>
+                            <input type="tel" id="newContact" placeholder="e.g. +63 912 xxx xxxx">
+                        </div>
+                        <div class="input-group">
+                            <label>Religion</label>
+                            <input type="text" id="newReligion" placeholder="e.g. Catholic">
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Occupation</label>
+                            <input type="text" id="newOccupation" placeholder="e.g. Teacher">
+                        </div>
+                        <div class="input-group">
+                            <label>Civil Status</label>
+                            <input type="text" id="newCivilStatus" placeholder="e.g. Single">
+                        </div>
+                        
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group full-width">
+                            <label>Home Address</label>
+                            <input type="text" id="newAddress" placeholder="Street/Purok, Barangay, Municipality, Province">
+                        </div>
+                       
+                    </div>
+                </div>
+
+                <!-- STEP 2: Emergency Contact -->
+                <div class="form-section step" data-step="2">
+                    <h4 class="section-title">II. In Case of Emergency (Please Contact)</h4>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Complete Name</label>
+                            <input type="text" id="emergencyName" placeholder="Full name">
+                        </div>
+                        <div class="input-group">
+                            <label>Relationship</label>
+                            <input type="text" id="emergencyRelationship" placeholder="e.g. Spouse, Friend">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Address</label>
+                            <input type="text" id="emergencyAddress" placeholder="Address">
+                        </div>
+                        <div class="input-group">
+                            <label>Contact Number</label>
+                            <input type="tel" id="emergencyContact" placeholder="e.g. +63 912 xxx xxxx">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Personal/Social History -->
+                <div class="form-section step" data-step="3">
+                    <h4 class="section-title">III. Personal/Social History</h4>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Smoking</label>
+                            <select id="newSmoking">
+                                <option value="">-- select --</option>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                                <option value="Quit">Quit</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Pack/Day or Years</label>
+                            <input type="text" id="newSmokingPack" placeholder="e.g. 1 pack/day or 5 years">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Alcohol Drinking</label>
+                            <select id="newAlcohol">
+                                <option value="">-- select --</option>
+                                <option value="No">No</option>
+                                <option value="Yes">Yes</option>
+                                <option value="Quit">Quit</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Type/Frequency</label>
+                            <input type="text" id="newAlcoholDetails" placeholder="Beer/Rhum, sessions, occasional">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Illegal Drug Use</label>
+                            <input type="text" id="newDrugs" placeholder="No / Yes (What kind?)">
+                        </div>
+                        <div class="input-group">
+                            <label>Sexually Active</label>
+                            <input type="text" id="newSexActivity" placeholder="Yes/No">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>No. of sexual partners this year</label>
+                            <input type="number" id="newSexPartners" min="0" placeholder="0">
+                        </div>
+                        <div class="input-group">
+                            <label>Partners</label>
+                            <select id="newSexPartnerGender">
+                                <option value="">-- select --</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Both">Both</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Past Medical History -->
+                <div class="form-section step" data-step="4">
+                    <h4 class="section-title">IV. Past Medical History</h4>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmAllergy"> Allergy (specify type)</label>
+                            <input type="text" id="pmAllergyType" placeholder="Food/Drug...">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmAsthma"> Asthma</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmCancer"> Cancer</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmCoronary"> Coronary Artery Disease</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmHypertension"> Hypertension / Elevated BP</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmCongenital"> Congenital Heart Disorder</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmDiabetes"> Diabetes Mellitus</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmThyroid"> Thyroid Disease</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmPeptic"> Peptic Ulcer</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmPCOS"> PCOS</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmPsych"> Psychological Disorder</label>
+                            <input type="text" id="pmPsychType" placeholder="Specify/Other">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmEpilepsy"> Epilepsy/Seizure Disorder</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmSkin"> Skin Disorder</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmTB"> Tuberculosis</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="pmHepatitis"> Hepatitis</label>
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+                </div>
+
+                <!-- STEP 5: Hospital / Surgical History -->
+                <div class="form-section step" data-step="5">
+                    <h4 class="section-title">V. Hospital Admission / Past Surgical History / Disability</h4>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Hospital Admission Diagnosis 1</label>
+                            <input type="text" id="hospitalDiagnosis1" placeholder="Diagnosis">
+                        </div>
+                        <div class="input-group">
+                            <label>When</label>
+                            <input type="date" id="hospitalWhen1">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Hospital Admission Diagnosis 2</label>
+                            <input type="text" id="hospitalDiagnosis2" placeholder="Diagnosis">
+                        </div>
+                        <div class="input-group">
+                            <label>When</label>
+                            <input type="date" id="hospitalWhen2">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Past Surgical Operation 1</label>
+                            <input type="text" id="surgeryType1" placeholder="Operation Type">
+                        </div>
+                        <div class="input-group">
+                            <label>When</label>
+                            <input type="date" id="surgeryWhen1">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Past Surgical Operation 2</label>
+                            <input type="text" id="surgeryType2" placeholder="Operation Type">
+                        </div>
+                        <div class="input-group">
+                            <label>When</label>
+                            <input type="date" id="surgeryWhen2">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Person with Disability (Specify)</label>
+                            <input type="text" id="disabilitySpecify" placeholder="Specify disability">
+                        </div>
+                        <div class="input-group">
+                            <label>Registered?</label>
+                            <select id="disabilityRegistered">
+                                <option value="">-- select --</option>
+                                <option value="Registered">Registered</option>
+                                <option value="Not Registered">Not Registered</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Willing to Donate Blood</label>
+                        <select id="donateBlood">
+                            <option value="">-- select --</option>
+                            <option value="Yes">Yes</option>
+                            <option value="Willing">Willing</option>
+                            <option value="Very Willing">Very Willing</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- STEP 6: Family History & Immunization -->
+                <div class="form-section step" data-step="6">
+                    <h4 class="section-title">VI. Family History and Immunization</h4>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Mother side (enumerate)</label>
+                            <textarea id="newFamilyHistoryMother" rows="3"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Father side (enumerate)</label>
+                            <textarea id="newFamilyHistoryFather" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Completed Newborn Immunization</label>
+                            <select id="newbornImmunization">
+                                <option value="">-- select --</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Immunized Against COVID-19?</label>
+                            <select id="newCovidVax">
+                                <option value="">-- select --</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>HPV Doses (women)</label>
+                            <input type="number" id="hpvDoses" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label>Tetanus Toxoid Doses</label>
+                            <input type="number" id="tetanusDoses" min="0">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Influenza/Flu Year</label>
+                            <input type="text" id="influenzaYear" placeholder="e.g. 2024">
+                        </div>
+                        <div class="input-group">
+                            <label>Pneumococcal Doses</label>
+                            <input type="number" id="pneumococcalDoses" min="0">
+                        </div>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Other Immunizations</label>
+                        <input type="text" id="otherImmunizations" placeholder="Specify">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Physical Notes / Other Findings</label>
+                        <textarea id="newPhysicalNotes" rows="3" placeholder="E.g. normal vitals, murmur, etc."></textarea>
+                    </div>
+                    <!-- COVID Vaccination Details -->
+                    <h4 class="section-subtitle">COVID-19 Vaccination Details</h4>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Brand</label>
+                            <input type="text" id="covidBrand" placeholder="e.g. Pfizer, Sinovac">
+                        </div>
+                        <div class="input-group">
+                            <label>Dose 1 Date</label>
+                            <input type="date" id="covidDose1">
+                        </div>
+                        <div class="input-group">
+                            <label>Dose 2 Date</label>
+                            <input type="date" id="covidDose2">
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Booster 1 Date</label>
+                            <input type="date" id="covidBooster1">
+                        </div>
+                        <div class="input-group">
+                            <label>Booster 2 Date</label>
+                            <input type="date" id="covidBooster2">
+                        </div>
+                        <div class="input-group">
+                            <label>If unvaccinated, reason</label>
+                            <input type="text" id="covidUnvaccinatedReason" placeholder="Reason">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 7: Maintenance Medication / OB-GYNE -->
+                <div class="form-section step" data-step="7">
+                    <h4 class="section-title">VII. Maintenance Medication & OB/GYNE</h4>
+                    <div class="input-group full-width">
+                        <label>Maintenance Medication Taken</label>
+                        <input type="text" id="maintenanceMedication" placeholder="Medication name / dosage">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>OB/GYNE Notes</label>
+                        <input type="text" id="obGynNotes" placeholder="Notes">
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Menarche (1st Menstruation)</label>
+                            <input type="text" id="menarche" placeholder="Age or date">
+                        </div>
+                        <div class="input-group">
+                            <label>Last Menstrual Period</label>
+                            <input type="text" id="lastMenstrualPeriod" placeholder="This month / last month">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Period / Duration</label>
+                            <input type="text" id="periodDuration" placeholder="e.g. 5 days">
+                        </div>
+                        <div class="input-group">
+                            <label>Interval / Cycle</label>
+                            <input type="text" id="intervalCycle" placeholder="e.g. 28 days">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>No. of pads per day</label>
+                            <input type="text" id="padsPerDay" placeholder="e.g. 3-5">
+                        </div>
+                        <div class="input-group">
+                            <label>Onset of Sexual Intercourse</label>
+                            <input type="text" id="onsetSexualIntercourse" placeholder="Age or date">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Birth Control Method</label>
+                            <input type="text" id="birthControlMethod" placeholder="Method">
+                        </div>
+                        <div class="input-group">
+                            <label>Menopausal Stage?</label>
+                            <select id="menopausalStage">
+                                <option value="">-- select --</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>If yes, what age?</label>
+                            <input type="text" id="menopausalAge" placeholder="Age">
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Pregnancy History</label>
+                        <textarea id="pregnancyHistory" rows="4" placeholder="Pregnancy history details"></textarea>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Are you pregnant now?</label>
+                            <select id="pregnantNow">
+                                <option value="">-- select --</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>How many months?</label>
+                            <input type="text" id="pregnancyMonths" placeholder="Months">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Pre-natal check up?</label>
+                            <select id="prenatalCheckup">
+                                <option value="">-- select --</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Where?</label>
+                            <input type="text" id="prenatalWhere" placeholder="Location">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Subject for pregnancy test?</label>
+                            <select id="pregnancyTestSubject">
+                                <option value="">-- select --</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Result</label>
+                            <input type="text" id="pregnancyTestResult" placeholder="Result">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Gravida</label>
+                            <input type="text" id="gravida" placeholder="Gravida">
+                        </div>
+                        <div class="input-group">
+                            <label>Para</label>
+                            <input type="text" id="para" placeholder="Para">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Term</label>
+                            <input type="text" id="term" placeholder="Term">
+                        </div>
+                        <div class="input-group">
+                            <label>Abortion</label>
+                            <input type="text" id="abortion" placeholder="Abortion">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Live Birth</label>
+                            <input type="text" id="liveBirth" placeholder="Live birth">
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Type of delivery</label>
+                            <select id="deliveryType">
+                                <option value="">-- select --</option>
+                                <option value="Non vaginal delivery">Non vaginal delivery</option>
+                                <option value="Hospital">Hospital</option>
+                                <option value="Cesarean section">Cesarean section</option>
+                                <option value="Home delivery">Home delivery</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Complications</label>
+                            <input type="text" id="deliveryComplications" placeholder="Complications">
+                        </div>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Family planning done, what type?</label>
+                        <input type="text" id="familyPlanningType" placeholder="Type">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>No. of years</label>
+                        <input type="text" id="familyPlanningYears" placeholder="Years">
+                    </div>
+                </div>
+
+                <!-- STEP 8: Head to Toe Assessment -->
+                <div class="form-section step" data-step="8">
+                    <h4 class="section-title">VIII. HEAD TO TOE ASSESSMENT</h4>
+
+                    <div class="subsection-title">NEUROLOGICAL ASSESSMENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="neuroNormalThought"> Normal thought processes</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="neuroNormalEmotional"> Normal Emotional Status</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="neuroNormalPsych"> Normal Psychological Status</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>How do you feel right now?</label>
+                            <input type="text" id="neuroHowFeel" placeholder="Describe how you feel">
+                        </div>
+                        <div class="input-group">
+                            <label>Others</label>
+                            <input type="text" id="neuroOthers" placeholder="Other findings">
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">HEENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentAnictericSclerae"> Anicteric Sclerae</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentPerla"> PERLA</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentAuralDischarge"> Aural Discharge</label>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentIntactTympanic"> Intact Tympanic Membrane</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentNasalFlaring"> Nasal Flaring</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentNasalDischarge"> Nasal Discharge</label>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentTonsillopharyngealCongestion"> Tonsillopharyngeal congestion</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentHypertropicTonsils"> Hypertropic tonsils</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentPalpableMass"> Palpable Mass</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="heentExudates"> Exudates</label>
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+
+                    <div class="subsection-title">RESPIRATORY ASSESSMENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="respNormalBreathSounds"> Normal breath sounds</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="respSymChestExpansion"> Symmetrical Chest Expansion</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="respRetractions"> Retractions</label>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="respCracklesRates"> Crackles/Rates</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="respWheezing"> Wheezing</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="respClearBreathSounds"> Clear breath sounds</label>
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">CARDIOVASCULAR ASSESSMENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioNormalHeartBeat"> Normal Heart beat</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioClubbing"> Clubbing of fingers</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioFingerDiscoloration"> Finger Discoloration</label>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioHeartMurmur"> Heart Murmur</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioIrregularHeartBeat"> Irregular Heart Beat</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioPalpitations"> Palpitations</label>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioFluidVolumeExcess"> Fluid Volume Excess</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="cardioFatigueMobility"> Fatigue on Mobility</label>
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+
+                    <div class="subsection-title">GASTROINTESTINAL ASSESSMENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="giRegularBowel"> Regular Bowel Movement</label>
+                        </div>
+                        <div class="input-group">
+                            <label>Number per day</label>
+                            <input type="text" id="giBowelPerDay" placeholder="Number per day">
+                        </div>
+                        <div class="input-group">
+                            <label>Borborygmi</label>
+                            <input type="text" id="giBorborygmi" placeholder="Borborygmi">
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="giConstipation"> Constipation</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="giLooseBowel"> Loose Bowel Movement</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="giHyperacidity"> Hyperacidity</label>
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">URINARY ASSESSMENT</div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="urinaryFlankPain"> Flank pain</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="urinaryPainful"> Painful Urination</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>No. of urination per day</label>
+                            <input type="text" id="urinaryFrequency" placeholder="Number per day">
+                        </div>
+                        <div class="input-group">
+                            <label>Estimated amount per voiding</label>
+                            <input type="text" id="urinaryAmountPerVoiding" placeholder="Amount">
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">INTEGUMENTARY ASSESSMENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="integPallor"> Pallor</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="integRashes"> Rashes</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="integJaundice"> Jaundice</label>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="integSkinTurgor"> Good skin turgor</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="integCyanosis"> Cyanosis</label>
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+
+                    <div class="subsection-title">EXTREMITIES ASSESSMENT</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="extegGrossDeformity"> Gross Deformity</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="extegNormalGait"> Normal Gait</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="extegNormalStrength"> Normal Strength</label>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Others</label>
+                            <input type="text" id="extegOthers" placeholder="Other findings">
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>OTHER PERTINENT FINDINGS UPON ASSESSMENT</label>
+                        <textarea id="assessmentOtherFindings" rows="3" placeholder="Describe other pertinent findings"></textarea>
+                    </div>
+                </div>
+
+                <!-- STEP 9: Physical Examination Form -->
+                <div class="form-section step" data-step="9">
+                    <h4 class="section-title">IX. APPENDIX A. PHYSICAL EXAMINATION FORM</h4>
+                    <p style="margin-bottom: 16px; color: #3a3a3a;">Please check (/) appropriate box or supply needed information.</p>
+
+                    <h4 class="section-subtitle">I. Physical Screening</h4>
+                    <div class="grid-4">
+                        <div class="input-group">
+                            <label>Height (cm)</label>
+                            <input type="text" id="appendixHeight" placeholder="cm">
+                        </div>
+                        <div class="input-group">
+                            <label>Weight (kg)</label>
+                            <input type="text" id="appendixWeight" placeholder="kg">
+                        </div>
+                        <div class="input-group">
+                            <label>Blood Pressure</label>
+                            <input type="text" id="appendixBP" placeholder="e.g. 120/80">
+                        </div>
+                        <div class="input-group">
+                            <label>Pulse Rate</label>
+                            <input type="text" id="appendixPulse" placeholder="bpm">
+                        </div>
+                    </div>
+                    <div class="grid-4">
+                        <div class="input-group">
+                            <label>Respiration</label>
+                            <input type="text" id="appendixRespiration" placeholder="breaths/min">
+                        </div>
+                        <div class="input-group">
+                            <label>SpO2</label>
+                            <input type="text" id="appendixSpO2" placeholder="%">
+                        </div>
+                        <div class="input-group">
+                            <label>BMI</label>
+                            <input type="text" id="appendixBMI" placeholder="BMI">
+                        </div>
+                        <div class="input-group">
+                            <label>BMI Class</label>
+                            <input type="text" id="appendixBMIClass" placeholder="Class">
+                        </div>
+                    </div>
+                    <div class="subsection-title">Visual Acuity</div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixVisionCorrected"> Corrected</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixVisionUncorrected"> Uncorrected</label>
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Right Vision (OD)</label>
+                            <input type="text" id="appendixOD" placeholder="OD">
+                        </div>
+                        <div class="input-group">
+                            <label>Left Vision (OS)</label>
+                            <input type="text" id="appendixOS" placeholder="OS">
+                        </div>
+                        <div class="input-group">
+                            <label>Ishihara Color Vision</label>
+                            <select id="appendixColorVision">
+                                <option value="">-- select --</option>
+                                <option value="Adequate">Adequate</option>
+                                <option value="Defective">Defective</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Ear/Hearing (AD)</label>
+                            <select id="appendixEarAD">
+                                <option value="">-- select --</option>
+                                <option value="Adequate">Adequate</option>
+                                <option value="Inadequate">Inadequate</option>
+                                <option value="Clear">Clear</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>AS</label>
+                            <select id="appendixEarAS">
+                                <option value="">-- select --</option>
+                                <option value="Adequate">Adequate</option>
+                                <option value="Inadequate">Inadequate</option>
+                                <option value="Unclear">Unclear</option>
+                            </select>
+                        </div>
+                        <div class="input-group"></div>
+                    </div>
+
+                    <h4 class="section-subtitle">II. Physical Examination</h4>
+                    <p style="margin-bottom: 16px; color: #3a3a3a;">Please check (/) Normal and specify abnormal findings.</p>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalSkin"> Skin</label>
+                            <input type="text" id="appendixFindingsSkin" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalHead"> Head, Neck, Scalp</label>
+                            <input type="text" id="appendixFindingsHead" placeholder="Findings">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalEyes"> Eyes (external)</label>
+                            <input type="text" id="appendixFindingsEyes" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalPupils"> Pupils Ophthalmoscopic</label>
+                            <input type="text" id="appendixFindingsPupils" placeholder="Findings">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalEars"> Ears, Nose, Sinuses</label>
+                            <input type="text" id="appendixFindingsEars" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalMouth"> Mouth, Throat</label>
+                            <input type="text" id="appendixFindingsMouth" placeholder="Findings">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalNeck"> Neck, Lymphnodes, Thyroid</label>
+                            <input type="text" id="appendixFindingsNeck" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalChest"> Chest, Breast, Axilla</label>
+                            <input type="text" id="appendixFindingsChest" placeholder="Findings">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalLungs"> Lungs</label>
+                            <input type="text" id="appendixFindingsLungs" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalHeart"> Heart & Valvular</label>
+                            <input type="text" id="appendixFindingsHeart" placeholder="Findings">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalBack"> Back & Abdomen</label>
+                            <input type="text" id="appendixFindingsBack" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalGenitalia"> Genitalia</label>
+                            <input type="text" id="appendixFindingsGenitalia" placeholder="Findings">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalAnus"> Anus, Rectum</label>
+                            <input type="text" id="appendixFindingsAnus" placeholder="Findings">
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixNormalExtremities"> Extremities</label>
+                            <input type="text" id="appendixFindingsExtremities" placeholder="Findings">
+                        </div>
+                    </div>
+
+                    <h4 class="section-subtitle">III. Ancillary Examinations</h4>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Complete Blood Count</label>
+                            <select id="appendixCBC">
+                                <option value="">-- select --</option>
+                                <option value="Normal">Normal</option>
+                                <option value="With Findings">With Findings</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Fecalysis / Stool Exam</label>
+                            <select id="appendixStool">
+                                <option value="">-- select --</option>
+                                <option value="Normal">Normal</option>
+                                <option value="With Findings">With Findings</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Pregnancy Test</label>
+                            <select id="appendixPregnancyTest">
+                                <option value="">-- select --</option>
+                                <option value="Positive">Positive</option>
+                                <option value="Negative">Negative</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Urinalysis</label>
+                            <select id="appendixUrinalysis">
+                                <option value="">-- select --</option>
+                                <option value="Normal">Normal</option>
+                                <option value="With Findings">With Findings</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Chest X-Ray</label>
+                            <select id="appendixXray">
+                                <option value="">-- select --</option>
+                                <option value="Normal">Normal</option>
+                                <option value="With Findings">With Findings</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Hep B (HBsAg Screening)</label>
+                            <select id="appendixHepB">
+                                <option value="">-- select --</option>
+                                <option value="Non-Reactive">Non-Reactive</option>
+                                <option value="Reactive">Reactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>Blood Type</label>
+                            <input type="text" id="appendixBloodType" placeholder="Type">
+                        </div>
+                        <div class="input-group">
+                            <label>MMSE Score</label>
+                            <select id="appendixMMSE">
+                                <option value="">-- select --</option>
+                                <option value="Normal">Normal</option>
+                                <option value="With Findings">With Findings</option>
+                                <option value="Further Evaluation">For further evaluation</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h4 class="section-subtitle">IV. Employee Classification</h4>
+                    <div class="grid-1">
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixClassA"> A. Medically, physically, and mentally FIT for ANY WORK or STUDY</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixClassB"> B. Physically under-developed or with corrective defects but otherwise FIT TO WORK or STUDY</label>
+                        </div>
+                        <div class="input-group">
+                            <label><input type="checkbox" id="appendixClassC"> C. Can study but owing to certain impairments or condition requiring special placement or limited duty</label>
+                        </div>
+                    </div>
+
+                    <h4 class="section-subtitle">V. Evaluating Personnel Remarks</h4>
+                    <div class="input-group full-width">
+                        <label>Diagnosis</label>
+                        <textarea id="appendixDiagnosis" rows="3"></textarea>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Remarks</label>
+                        <textarea id="appendixRemarks" rows="3"></textarea>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>School Nurse</label>
+                            <input type="text" id="appendixSchoolNurse" placeholder="Name">
+                        </div>
+                        <div class="input-group">
+                            <label>Lic No.</label>
+                            <input type="text" id="appendixSchoolNurseLicense" placeholder="License No.">
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="input-group">
+                            <label>School Physician</label>
+                            <input type="text" id="appendixPhysician" placeholder="Name">
+                        </div>
+                        <div class="input-group">
+                            <label>License No.</label>
+                            <input type="text" id="appendixPhysicianLicense" placeholder="License No.">
+                        </div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="input-group">
+                            <label>Date filed</label>
+                            <input type="date" id="appendixDateFiled">
+                        </div>
+                        <div class="input-group">
+                            <label>File No.</label>
+                            <input type="text" id="appendixFileNo" placeholder="File No.">
+                        </div>
+                        <div class="input-group">
+                            <label>Recorded by</label>
+                            <input type="text" id="appendixRecordedBy" placeholder="Recorded by">
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end form-container -->
+
+            <div class="modal-footer">
+                <button id="prevBtn" type="button" class="cancel-btn" onclick="changeStep(-1)">← Previous</button>
+                <button id="nextBtn" type="button" class="save-btn" onclick="changeStep(1)">Next →</button>
+                <button id="submitBtn" type="submit" class="save-btn" style="display:none;">Save Health Profile</button>
+                <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="viewModal" class="modal">
+    <div class="modal-content wide-modal">
+        <div class="modal-header">
+            <h3>Employee Profile</h3>
+            <span class="close" onclick="closeViewModal()">&times;</span>
+        </div>
+        <div class="form-container" style="padding: 20px;">
+            <!-- Toggle Buttons -->
+            <div style="display: flex; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e0e7ff;">
+                <button id="basicViewBtn" class="toggle-btn active" onclick="toggleView('basic')">
+                    Basic Info
+                </button>
+                <button id="fullViewBtn" class="toggle-btn" onclick="toggleView('full')">
+                    Full Health Profile
+                </button>
+            </div>
+            
+            <!-- Basic View -->
+            <div id="basicViewContent" class="view-content active"></div>
+            
+            <!-- Full Profile View -->
+            <div id="fullViewContent" class="view-content" style="display: none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="cancel-btn" onclick="closeViewModal()">Close</button>
+            <button type="button" class="save-btn" id="printProfileBtn">Print</button>
+        </div>
+    </div>
+</div>
+
+<div id="certificateModal" class="modal">
+    <div class="modal-content wide-modal">
+        <div class="modal-header">
+            <h3>Medical Certificate</h3>
+            <span class="close" id="closeCertificateModal">&times;</span>
+        </div>
+        <div class="form-container">
+            <form id="certificateForm">
+                <div class="consult-grid">
+                    <div class="input-group">
+                        <label>Employee</label>
+                        <div class="select-search-group">
+                            <input type="search" id="certEmployeeSearch" placeholder="Search employee..." list="certEmployeeList" autocomplete="off">
+                            <datalist id="certEmployeeList"></datalist>
+                            <input type="hidden" id="certEmployeeId">
+                        </div>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Full Name</label>
+                        <input type="text" id="certFullName" placeholder="Employee full name" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="number" id="certAge" min="0" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>Gender</label>
+                        <select id="certGender" disabled>
+                            <option value="">-- select --</option>
+                            <option value="Female">Female</option>
+                            <option value="Male">Male</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Address</label>
+                        <input type="text" id="certAddress" placeholder="Employee address" readonly>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Diagnosis</label>
+                        <textarea id="certDiagnosis" rows="3" placeholder="Diagnosis / findings"></textarea>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Recommendation</label>
+                        <textarea id="certRecommendation" rows="3" placeholder="Recommendation"></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Date</label>
+                        <input type="date" id="certDate" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeCertificateModal()">Close</button>
+                    <button type="button" class="save-btn" id="printCertificateBtn">Print Certificate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="rxModal" class="modal">
+    <div class="modal-content wide-modal">
+        <div class="modal-header">
+            <h3>Prescription</h3>
+            <span class="close" id="closeRxModal">&times;</span>
+        </div>
+        <div class="form-container">
+            <form id="rxForm">
+                <div class="consult-grid">
+                    <div class="input-group">
+                        <label>Employee</label>
+                        <div class="select-search-group">
+                            <input type="search" id="rxEmployeeSearch" placeholder="Search employee..." list="rxEmployeeList" autocomplete="off">
+                            <datalist id="rxEmployeeList"></datalist>
+                            <input type="hidden" id="rxEmployeeId">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Consultation</label>
+                        <select id="rxConsultDate" disabled>
+                            <option value="">-- select consultation --</option>
+                        </select>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Full Name</label>
+                        <input type="text" id="rxFullName" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>Age</label>
+                        <input type="text" id="rxAge" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>Gender</label>
+                        <input type="text" id="rxGender" readonly>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Address</label>
+                        <input type="text" id="rxAddress" readonly>
+                    </div>
+                    <div class="input-group">
+                        <label>Prescription Date</label>
+                        <input type="datetime-local" id="rxPrescribedOn">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Clinic / Doctor</label>
+                        <input type="text" id="rxDoctorName" placeholder="Dr. Val Acosta Clinic">
+                    </div>
+                </div>
+                <div class="prescription-items">
+                    <div class="rx-item-row">
+                        <div class="input-group full-width">
+                            <label>Medicine 1</label>
+                            <input type="text" id="rxMedName1" placeholder="Tetanus toxoid">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Instructions 1</label>
+                            <input type="text" id="rxMedDetails1" placeholder="0.5ml Injection #1, As single dose as needed">
+                        </div>
+                    </div>
+                    <div class="rx-item-row">
+                        <div class="input-group full-width">
+                            <label>Medicine 2</label>
+                            <input type="text" id="rxMedName2" placeholder="Mefenamic acid">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Instructions 2</label>
+                            <input type="text" id="rxMedDetails2" placeholder="500mg Capsule #10, 1 Capsule, 4 times a day as needed">
+                        </div>
+                    </div>
+                    <div class="rx-item-row">
+                        <div class="input-group full-width">
+                            <label>Medicine 3</label>
+                            <input type="text" id="rxMedName3" placeholder="">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Instructions 3</label>
+                            <input type="text" id="rxMedDetails3" placeholder="">
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group full-width">
+                    <label>Note</label>
+                    <textarea id="rxNote" rows="3" placeholder="Follow up at school clinic on ..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeRxModal()">Close</button>
+                    <button type="button" class="save-btn" id="printRxBtn">Print Prescription</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="consultDetailModal" class="modal">
+    <div class="modal-content wide-modal">
+        <div class="modal-header">
+            <h3>Consultation Details</h3>
+            <span class="close" onclick="closeConsultDetailModal()">&times;</span>
+        </div>
+        <div class="form-container" style="padding:20px;" id="consultDetailContent"></div>
+        <div class="modal-footer">
+            <button type="button" class="cancel-btn" onclick="closeConsultDetailModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="certificatePrintArea" class="certificate-print-area"></div>
+<div id="rxPrintArea" class="prescription-print-area"></div>
+
+<div id="importModal" class="modal">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h3>Import Scanned Data</h3>
+            <span class="close" id="closeImportModal">&times;</span>
+        </div>
+        <div class="form-container" style="padding:20px;">
+            <div class="form-section">
+                <div class="grid-1">
+                    <div class="input-group">
+                        <label>Import Type</label>
+                        <select id="importTypeSelect">
+                            <option value="consultation">Consultation Form</option>
+                            <option value="profile">NBSC Employee Health Profile Form</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                    <button type="button" class="cancel-btn" id="cancelImportBtn">Cancel</button>
+                    <button type="button" class="save-btn" id="confirmImportBtn">Select File</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="exportModal" class="modal">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h3>Export Employee Data</h3>
+            <span class="close" id="closeExportModal">&times;</span>
+        </div>
+        <div class="form-container" style="padding:20px;">
+            <div class="form-section">
+                <div class="grid-1">
+                    <div class="input-group">
+                        <label>Choose Employee</label>
+                        <select id="exportEmployeeSelect">
+                            <option value="">-- select employee --</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Export Type</label>
+                        <select id="exportTypeSelect">
+                            <option value="profile">Medical Profile</option>
+                            <option value="consultation">Consultation Form</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="exportConsultationDateGroup" style="display:none;">
+                        <label>Consultation Date</label>
+                        <select id="exportConsultDateSelect">
+                            <option value="">-- select consultation --</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                    <button type="button" class="cancel-btn" id="cancelExportBtn">Cancel</button>
+                    <button type="button" class="save-btn" id="confirmExportBtn">Export</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
