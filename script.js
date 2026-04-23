@@ -1237,8 +1237,21 @@ closeRxModalBtn.onclick = () => { rxModal.style.display = 'none'; };
 printRxBtn.onclick = () => {
     renderPrescriptionPreview();
     const rxPrintArea = document.getElementById('rxPrintArea');
-    if (rxPrintArea) rxPrintArea.classList.add('print-active');
-    setTimeout(() => window.print(), 50);
+    if (!rxPrintArea) return;
+    rxPrintArea.style.display = 'block';
+    rxPrintArea.classList.add('print-active');
+    const cleanupPrint = () => {
+        rxPrintArea.classList.remove('print-active');
+        rxPrintArea.style.display = 'none';
+        window.onafterprint = null;
+    };
+    window.onafterprint = cleanupPrint;
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            window.print();
+            if (typeof window.onafterprint !== 'function') cleanupPrint();
+        }, 150);
+    });
 };
 
 function closeRxModal() {
@@ -1350,44 +1363,53 @@ function renderPrescriptionPreview() {
     }
     const preview = document.getElementById('rxPrintArea');
     if (!preview) return;
-    const prescriptionId = generatePrescriptionId();
-    preview.className = 'prescription-print-area';
-    preview.innerHTML = `
-        <div class="prescription-a4">
-            <div class="prescription-doctor">
-                <div class="doctor-name">Val O. Acosta, MD</div>
-                <div class="doctor-title">General Practice</div>
-                <div class="doctor-location">Northern Bukidnon State College<br>Health Services Office<br>Kihare, Tankulan Manolo Fortich Bukidnon</div>
+    const medicationRows = meds.length ? meds.map(m => `
+            <div class="prescription-item">
+                <div class="rx-name">${m.name}</div>
+                <div class="rx-details">${m.details || ''}</div>
             </div>
-            <div class="prescription-meta">
-                <div class="prescription-top">
+        `).join('') : '<div class="prescription-item"><div class="rx-name">No medicines entered</div></div>';
+    const noteLines = note ? `<div class="prescription-note-text">${note}</div>` : '';
+    preview.innerHTML = `
+        <div class="prescription-page">
+            <div class="prescription-header">
+                <div class="prescription-doctor">
+                    <div class="doctor-name">Val O. Acosta, MD</div>
+                    <div class="doctor-title">General Practice</div>
+                    <div class="doctor-location">Northern Bukidnon State College</div>
+                    <div class="doctor-location">Health Services Office</div>
+                    <div class="doctor-location">Kihare, Tankulan Manolo Fortich Bukidnon</div>
+                </div>
+                <div class="prescription-date">
                     <div><strong>Prescribed on:</strong> ${prescribedOn} PHT</div>
                 </div>
-                <div class="prescription-patient-info" style="margin-top:8px;">
-                    <div><strong>Patient:</strong> ${fullName}</div>
-                    <div><strong>Age:</strong> ${age} years old</div>
-                    <div><strong>Gender:</strong> ${gender}</div>
-                </div>
             </div>
-            <div class="prescription-title">Rx</div>
+            <div class="prescription-patient">
+                <div class="patient-field"><span>Patient:</span><span class="patient-line">${fullName !== '______________________' ? fullName : ''}</span></div>
+                <div class="patient-field"><span>Age:</span><span class="patient-line">${age !== '____' ? age + ' years old' : ''}</span></div>
+                <div class="patient-field"><span>Gender:</span><span class="patient-line">${gender !== '___' ? gender : ''}</span></div>
+            </div>
+            <div class="rx-logo">Rx</div>
             <div class="prescription-items">
-                ${meds.length ? meds.map(m => `
-                    <div class="prescription-item">
-                        <div class="rx-name">${m.name}</div>
-                        <div class="rx-details">${m.details || ''}</div>
-                    </div>
-                `).join('') : '<div class="prescription-item"><div class="rx-name">No medicines entered</div></div>'}
+                ${medicationRows}
+                ${!meds.length ? Array.from({ length: 2 }).map(() => '<div class="prescription-line"></div>').join('') : ''}
             </div>
-            ${note ? `<div class="prescription-note"><span>Note:</span> ${note}</div>` : '<div class="prescription-note"><span>Note:</span> ______________________________</div>'}
-            <div class="prescription-signature">
-                <div class="signature-line"></div>
-                <div class="signature-text">
-                    <div>Physician's Signature</div>
-                    <div>PRC No.: 0154636</div>
-                    <div>PTR No.: 6540309</div>
+            <div class="prescription-note-section">
+                <div class="prescription-note-label">Note:</div>
+                <div class="prescription-note-lines">
+                    ${noteLines || Array.from({ length: 4 }).map(() => '<div class="note-line"></div>').join('')}
                 </div>
             </div>
-        </div>
+            <div class="prescription-signature">
+                <div class="signature-block">
+                    <div class="signature-line"></div>
+                    <div class="signature-text">
+                        <div>Physician's Signature</div>
+                        <div>PRC No.: 0154636</div>
+                        <div>PTR No.: 6540309</div>
+                    </div>
+                </div>
+           
     `;
 }
 
