@@ -408,6 +408,17 @@ tbody tr { background: transparent !important; }
     background: rgba(0,0,0,0.7);
     overflow-y: auto;
     overflow-x: hidden;
+    align-items: center;
+    justify-content: center;
+}
+.modal .modal-content:not(.wide-modal) {
+    margin: 0;
+    width: 100%;
+    max-width: 520px;
+    background: white;
+    border-radius: 12px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 .wide-modal {
     background: white;
@@ -421,6 +432,26 @@ tbody tr { background: transparent !important; }
     position: relative;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
+.select-search-group { display: grid; gap: 8px; }
+.select-search-group input,
+.select-search-group select {
+    background: #fff;
+    color: #1f3a6d;
+    border: 1px solid #c4cdd9;
+    border-radius: 8px;
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    outline: none;
+}
+.select-search-group input:focus,
+.select-search-group select:focus { border-color: #1f3a6d; }
+.search-results { display: none; border-radius: 8px; background: #fff; border: 1px solid #c4cdd9; max-height: 240px; overflow-y: auto; }
+.search-results.hidden { display: none; }
+.search-results .result-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #eef2f7; }
+.search-results .result-item:last-child { border-bottom: none; }
+.search-results .result-item:hover { background: #f4f7fb; }
+.search-results .result-item span { color: #556476; font-size: 0.82rem; }
 
 
 .step-indicator {
@@ -632,6 +663,7 @@ tbody tr { background: transparent !important; }
     html, body { width: 100%; height: 100%; margin: 0; padding: 0; }
     body * { visibility: hidden; }
     #rxPrintArea.print-active, #rxPrintArea.print-active * { visibility: visible; }
+    #viewModal, #viewModal * { visibility: visible; }
     #rxPrintArea.print-active {
         display: block;
         position: absolute;
@@ -642,7 +674,8 @@ tbody tr { background: transparent !important; }
         margin: 0;
         background: white;
     }
-    #rxModal, #viewModal, #importModal, #addModal, #consultModal, #consultDetailModal { visibility: hidden; }
+    #rxModal, #importModal, #addModal, #consultModal, #consultDetailModal { visibility: hidden; }
+    #viewModal .modal-header, #viewModal .modal-footer { display: none; }
     .step-indicator { display: none; }
 }
 
@@ -830,6 +863,7 @@ tbody tr { background: transparent !important; }
 
 @media print {
     body * { visibility: hidden; }
+    #viewModal, #viewModal * { visibility: visible; }
     .prescription-print-area {
         display: block !important;
         visibility: visible;

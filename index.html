@@ -120,7 +120,7 @@
                             <input type="search" id="consultEmployeeSearch" placeholder="Search employee..." list="consultEmployeeList" autocomplete="off">
                             <datalist id="consultEmployeeList"></datalist>
                             <input type="hidden" id="consultEmployeeId">
-                            <div id="consultEmployeeResults" class="search-results"></div>
+                            <div id="consultEmployeeResults" class="search-results hidden"></div>
                         </div>
                     </div>
                     <div class="input-group">
@@ -130,18 +130,6 @@
                             <option value="Non-Teaching">Non-Teaching</option>
                             <option value="Teaching">Teaching</option>
                         </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Family Name</label>
-                        <input type="text" id="consultFamilyName">
-                    </div>
-                    <div class="input-group">
-                        <label>First Name</label>
-                        <input type="text" id="consultFirstName">
-                    </div>
-                    <div class="input-group">
-                        <label>Middle Name</label>
-                        <input type="text" id="consultMiddleName">
                     </div>
                     <div class="input-group">
                         <label>Sex</label>
@@ -161,8 +149,18 @@
                             <option value="Widow/Widower">Widow/Widower</option>
                         </select>
                     </div>
-                </div>
-                <div class="consult-grid">
+                    <div class="input-group">
+                        <label>Family Name</label>
+                        <input type="text" id="consultFamilyName">
+                    </div>
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <input type="text" id="consultFirstName">
+                    </div>
+                    <div class="input-group">
+                        <label>Middle Name</label>
+                        <input type="text" id="consultMiddleName">
+                    </div>
                     <div class="input-group">
                         <label>Phone Number</label>
                         <input type="tel" id="consultPhone">
@@ -183,12 +181,6 @@
                         <label>Weight</label>
                         <input type="text" id="consultWeight" placeholder="kg or lbs">
                     </div>
-                    <div class="input-group full-width">
-                        <label>Address</label>
-                        <input type="text" id="consultAddress">
-                    </div>
-                </div>
-                <div class="consult-grid">
                     <div class="input-group">
                         <label>Date</label>
                         <input type="date" id="consultDate">
@@ -215,6 +207,10 @@
                     </div>
                 </div>
                 <div class="consult-grid full-width">
+                    <div class="input-group full-width">
+                        <label>Address</label>
+                        <input type="text" id="consultAddress">
+                    </div>
                     <div class="input-group full-width">
                         <label>Chief Complaint / Findings</label>
                         <textarea id="consultComplaint" rows="3"></textarea>
@@ -1478,9 +1474,12 @@
                 <div class="grid-1">
                     <div class="input-group">
                         <label>Choose Employee</label>
-                        <select id="exportEmployeeSelect">
-                            <option value="">-- select employee --</option>
-                        </select>
+                        <div class="select-search-group">
+                            <input type="search" id="exportEmployeeSearch" placeholder="Search employee..." autocomplete="off" list="exportEmployeeList">
+                            <datalist id="exportEmployeeList"></datalist>
+                            <div id="exportEmployeeResults" class="search-results hidden"></div>
+                            <input type="hidden" id="exportEmployeeId">
+                        </div>
                     </div>
                     <div class="input-group">
                         <label>Export Type</label>

@@ -626,6 +626,14 @@ const PROFILE_CSS = `<style>
 .pv-class-pill.on-B{background:#fff3e0;color:#e65100;}
 .pv-class-pill.on-C{background:#ffebee;color:#c62828;}
 .pv-class-pill.off{background:#f3f5f7;color:#b8c8dd;}
+@media print {
+    body * { visibility: hidden; }
+    #viewModal, #viewModal * { visibility: visible; }
+    #viewModal .modal-header, #viewModal .modal-footer { display: none; }
+    .pv-section { page-break-before: always; margin-bottom: 0; }
+    .pv-section:first-child { page-break-before: avoid; }
+    .pv-wrap { padding: 0; }
+}
 </style>`;
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -769,7 +777,7 @@ function renderFullProfileView(emp) {
         ${PROFILE_CSS}
         <div class="pv-wrap">
 
-            ${pvSection('I. Personal Profile',
+            ${pvSection('I. Personal Information',
                 pvGrid(3, `
                     ${pvField('Employee ID', emp.id)}
                     ${pvField('Full Name', emp.name)}
@@ -785,7 +793,7 @@ function renderFullProfileView(emp) {
                 `)
             )}
 
-            ${pvSection('II. In Case of Emergency',
+            ${pvSection('II. Emergency Contact',
                 pvGrid(3, `
                     ${pvField('Complete Name', emp.emergencyName)}
                     ${pvField('Relationship', emp.emergencyRelationship)}
@@ -794,7 +802,7 @@ function renderFullProfileView(emp) {
                 `)
             )}
 
-            ${pvSection('III. Personal / Social History',
+            ${pvSection('III. Social History',
                 pvGrid(3, `
                     ${pvField('Smoking', emp.smoking)}
                     ${pvField('Pack/Day or Years', emp.smokingPack)}
@@ -808,7 +816,7 @@ function renderFullProfileView(emp) {
             )}
 
             <div class="pv-section">
-                <p class="pv-section-title">IV. Past Medical History</p>
+                <p class="pv-section-title">IV. Medical History</p>
                 ${pvGrid(3, `
                     ${pvCbField('Allergy', emp.pmAllergy)}
                     ${pvField('Allergy Type', emp.pmAllergyType)}
@@ -830,7 +838,7 @@ function renderFullProfileView(emp) {
                 `)}
             </div>
 
-            ${pvSection('V. Hospital Admission / Surgical History / Disability',
+            ${pvSection('V. Hospital & Surgical History',
                 pvGrid(3, `
                     ${pvField('Hospital Diagnosis 1', emp.hospitalDiagnosis1)}
                     ${pvField('When', emp.hospitalWhen1)}
@@ -873,7 +881,7 @@ function renderFullProfileView(emp) {
                 `)
             )}
 
-            ${pvSection('VII. Maintenance Medication & OB/GYNE',
+            ${pvSection('VII. Medications & OB/GYNE',
                 pvGrid(3, `
                     ${pvField('Maintenance Medication', emp.maintenanceMedication, 'span3')}
                     ${pvField('OB/GYNE Notes', emp.obGynNotes, 'span3')}
@@ -908,7 +916,7 @@ function renderFullProfileView(emp) {
             )}
 
             <div class="pv-section">
-                <p class="pv-section-title">VIII. Head to Toe Assessment</p>
+                <p class="pv-section-title">VIII. Physical Assessment</p>
 
                 <p class="pv-subsection">Neurological</p>
                 ${pvCheckedGroup([
@@ -1491,7 +1499,10 @@ const exportModal = document.getElementById('exportModal');
 const closeExportModalBtn = document.getElementById('closeExportModal');
 const cancelExportBtn = document.getElementById('cancelExportBtn');
 const confirmExportBtn = document.getElementById('confirmExportBtn');
-const exportEmployeeSelect = document.getElementById('exportEmployeeSelect');
+const exportEmployeeSearch = document.getElementById('exportEmployeeSearch');
+const exportEmployeeList = document.getElementById('exportEmployeeList');
+const exportEmployeeResults = document.getElementById('exportEmployeeResults');
+const exportEmployeeIdInput = document.getElementById('exportEmployeeId');
 const exportTypeSelect = document.getElementById('exportTypeSelect');
 const exportConsultDateSelect = document.getElementById('exportConsultDateSelect');
 const exportConsultationDateGroup = document.getElementById('exportConsultationDateGroup');
@@ -1659,14 +1670,68 @@ function extractVitals(lines, type) {
 }
 
 // Export Functions
+function getExportEmployeeIdFromInput() {
+    const value = (exportEmployeeSearch.value || '').trim();
+    const idMatch = value.match(/\((EMP-\d{4})\)$/);
+    if (idMatch) return idMatch[1];
+    const exactMatch = employees.find(e => `${e.name} (${e.id})` === value);
+    if (exactMatch) return exactMatch.id;
+    const byId = employees.find(e => e.id === value);
+    return byId ? byId.id : '';
+}
+
 function populateExportEmployeeOptions() {
-    exportEmployeeSelect.innerHTML = '<option value="">-- select employee --</option>' +
-        sortEmployeesByName(employees).map(emp => `<option value="${emp.id}">${emp.name} (${emp.id})</option>`).join('');
+    exportEmployeeSearch.value = '';
+    exportEmployeeIdInput.value = '';
+    exportEmployeeResults.innerHTML = '';
+    exportEmployeeResults.classList.add('hidden');
+    updateExportEmployeeListOptions();
+    updateExportConsultationDates();
+}
+
+function updateExportEmployeeListOptions() {
+    exportEmployeeList.innerHTML = sortEmployeesByName(employees)
+        .map(emp => `<option value="${emp.name} (${emp.id})">`).join('');
+}
+
+function updateExportEmployeeSearch() {
+    const query = (exportEmployeeSearch.value || '').toLowerCase().trim();
+    if (!query) {
+        exportEmployeeResults.innerHTML = '';
+        exportEmployeeResults.classList.add('hidden');
+        exportEmployeeIdInput.value = '';
+        updateExportConsultationDates();
+        return;
+    }
+
+    const matches = sortEmployeesByName(employees).filter(emp =>
+        emp.name.toLowerCase().includes(query) || emp.id.toLowerCase().includes(query)
+    ).slice(0, 10);
+
+    if (!matches.length) {
+        exportEmployeeResults.innerHTML = '<div class="search-result-item no-results">No matching employee found.</div>';
+        exportEmployeeResults.classList.remove('hidden');
+        exportEmployeeIdInput.value = '';
+        updateExportConsultationDates();
+        return;
+    }
+
+    exportEmployeeResults.innerHTML = matches.map(emp =>
+        `<div class="search-result-item" data-id="${emp.id}">${emp.name} (${emp.id})</div>`
+    ).join('');
+    exportEmployeeResults.classList.remove('hidden');
+}
+
+function selectExportEmployeeResult(employeeId, displayText) {
+    exportEmployeeIdInput.value = employeeId;
+    exportEmployeeSearch.value = displayText;
+    exportEmployeeResults.innerHTML = '';
+    exportEmployeeResults.classList.add('hidden');
     updateExportConsultationDates();
 }
 
 function updateExportConsultationDates() {
-    const employeeId = exportEmployeeSelect.value;
+    const employeeId = exportEmployeeIdInput.value;
     const emp = employees.find(e => e.id === employeeId);
     const showingConsultation = exportTypeSelect.value === 'consultation';
 
@@ -1788,11 +1853,21 @@ function exportEmployeeProfile(emp) {
               <span class="panel-title">VIII. Head to Toe Assessment</span>
             </div>
             <div class="panel-body">
+              <div style="font-size:12px; font-weight:600; margin-bottom:0.75rem;">Neurological Assessment</div>
               ${kvRow('Normal thought processes', yesNo(emp.neuroNormalThought))}
               ${kvRow('Normal emotional status', yesNo(emp.neuroNormalEmotional))}
               ${kvRow('Normal psychological status', yesNo(emp.neuroNormalPsych))}
               ${kvRow('How do you feel right now', emp.neuroHowFeel || '—')}
               ${kvRow('Other neurological findings', emp.neuroOthers || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">HEENT Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Anicteric sclerae', yesNo(emp.heentAnictericSclerae))}
               ${kvRow('PERLA', yesNo(emp.heentPerla))}
               ${kvRow('Aural discharge', yesNo(emp.heentAuralDischarge))}
@@ -1803,12 +1878,30 @@ function exportEmployeeProfile(emp) {
               ${kvRow('Hypertropic tonsils', yesNo(emp.heentHypertropicTonsils))}
               ${kvRow('Palpable mass', yesNo(emp.heentPalpableMass))}
               ${kvRow('Exudates', yesNo(emp.heentExudates))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Respiratory Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Normal breath sounds', yesNo(emp.respNormalBreathSounds))}
               ${kvRow('Symmetrical chest expansion', yesNo(emp.respSymChestExpansion))}
               ${kvRow('Retractions', yesNo(emp.respRetractions))}
               ${kvRow('Crackles / rates', yesNo(emp.respCracklesRates))}
               ${kvRow('Wheezing', yesNo(emp.respWheezing))}
               ${kvRow('Clear breath sounds', yesNo(emp.respClearBreathSounds))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Cardiovascular Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Normal heartbeat', yesNo(emp.cardioNormalHeartBeat))}
               ${kvRow('Clubbing of fingers', yesNo(emp.cardioClubbing))}
               ${kvRow('Finger discoloration', yesNo(emp.cardioFingerDiscoloration))}
@@ -1817,25 +1910,70 @@ function exportEmployeeProfile(emp) {
               ${kvRow('Palpitations', yesNo(emp.cardioPalpitations))}
               ${kvRow('Fluid volume excess', yesNo(emp.cardioFluidVolumeExcess))}
               ${kvRow('Fatigue on mobility', yesNo(emp.cardioFatigueMobility))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Gastrointestinal Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Regular bowel movement', yesNo(emp.giRegularBowel))}
               ${kvRow('Bowel movements per day', emp.giBowelPerDay || '—')}
               ${kvRow('Borborygmi', emp.giBorborygmi || '—')}
               ${kvRow('Constipation', yesNo(emp.giConstipation))}
               ${kvRow('Loose bowel movement', yesNo(emp.giLooseBowel))}
               ${kvRow('Hyperacidity', yesNo(emp.giHyperacidity))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Urinary Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Flank pain', yesNo(emp.urinaryFlankPain))}
               ${kvRow('Painful urination', yesNo(emp.urinaryPainful))}
               ${kvRow('Urination frequency', emp.urinaryFrequency || '—')}
               ${kvRow('Amount per voiding', emp.urinaryAmountPerVoiding || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Integumentary Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Pallor', yesNo(emp.integPallor))}
               ${kvRow('Rashes', yesNo(emp.integRashes))}
               ${kvRow('Jaundice', yesNo(emp.integJaundice))}
               ${kvRow('Skin turgor', yesNo(emp.integSkinTurgor))}
               ${kvRow('Cyanosis', yesNo(emp.integCyanosis))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Extremities Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Gross deformity', yesNo(emp.extegGrossDeformity))}
               ${kvRow('Normal gait', yesNo(emp.extegNormalGait))}
               ${kvRow('Normal strength', yesNo(emp.extegNormalStrength))}
-              ${kvRow('Extremities other findings', emp.extegOthers || '—')}
+              ${kvRow('Other extremities findings', emp.extegOthers || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#5DCAA5;"></div>
+              <span class="panel-title">Other Pertinent Findings Upon Assessment</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Other pertinent findings', otherFindings)}
             </div>
           </div>
@@ -1845,9 +1983,10 @@ function exportEmployeeProfile(emp) {
           <div class="panel">
             <div class="panel-head">
               <div class="panel-dot" style="background:#7F77DD;"></div>
-              <span class="panel-title">IX. Appendix A — Physical Examination</span>
+              <span class="panel-title">IX. Appendix A — Physical Examination Form</span>
             </div>
             <div class="panel-body">
+              <div style="font-size:12px; font-weight:600; margin-bottom:0.75rem;">Physical Screening</div>
               ${kvRow('Height', emp.appendixHeight ? `${emp.appendixHeight} cm` : '—')}
               ${kvRow('Weight', emp.appendixWeight ? `${emp.appendixWeight} kg` : '—')}
               ${kvRow('Blood pressure', emp.appendixBP || '—')}
@@ -1856,27 +1995,101 @@ function exportEmployeeProfile(emp) {
               ${kvRow('SpO2', emp.appendixSpO2 || '—')}
               ${kvRow('BMI', emp.appendixBMI || '—')}
               ${kvRow('BMI class', emp.appendixBMIClass || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#7F77DD;"></div>
+              <span class="panel-title">Visual Acuity</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Vision corrected', yesNo(emp.appendixVisionCorrected))}
               ${kvRow('Vision uncorrected', yesNo(emp.appendixVisionUncorrected))}
               ${kvRow('Right vision (OD)', emp.appendixOD || '—')}
               ${kvRow('Left vision (OS)', emp.appendixOS || '—')}
               ${kvRow('Color vision', emp.appendixColorVision || '—')}
-              ${kvRow('Ear/Hearing AD', emp.appendixEarAD || '—')}
-              ${kvRow('Ear/Hearing AS', emp.appendixEarAS || '—')}
-              ${kvRow('CBC', emp.appendixCBC || '—')}
-              ${kvRow('Stool exam', emp.appendixStool || '—')}
-              ${kvRow('Pregnancy test', emp.appendixPregnancyTest || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#7F77DD;"></div>
+              <span class="panel-title">Physical Examination</span>
+            </div>
+            <div class="panel-body">
+              ${kvRow('Skin', emp.appendixNormalSkin || '—')}
+              ${kvRow('Skin findings', emp.appendixFindingsSkin || '—')}
+              ${kvRow('Head / Neck / Scalp', emp.appendixNormalHead || '—')}
+              ${kvRow('Head findings', emp.appendixFindingsHead || '—')}
+              ${kvRow('Eyes (External)', emp.appendixNormalEyes || '—')}
+              ${kvRow('Eyes findings', emp.appendixFindingsEyes || '—')}
+              ${kvRow('Pupils', emp.appendixNormalPupils || '—')}
+              ${kvRow('Pupils findings', emp.appendixFindingsPupils || '—')}
+              ${kvRow('Ears / Nose / Sinuses', emp.appendixNormalEars || '—')}
+              ${kvRow('Ears / Nose / Sinuses findings', emp.appendixFindingsEars || '—')}
+              ${kvRow('Mouth / Throat', emp.appendixNormalMouth || '—')}
+              ${kvRow('Mouth findings', emp.appendixFindingsMouth || '—')}
+              ${kvRow('Neck / Lymph / Thyroid', emp.appendixNormalNeck || '—')}
+              ${kvRow('Neck findings', emp.appendixFindingsNeck || '—')}
+              ${kvRow('Chest / Breast / Axilla', emp.appendixNormalChest || '—')}
+              ${kvRow('Chest findings', emp.appendixFindingsChest || '—')}
+              ${kvRow('Lungs', emp.appendixNormalLungs || '—')}
+              ${kvRow('Lungs findings', emp.appendixFindingsLungs || '—')}
+              ${kvRow('Heart & Valvular', emp.appendixNormalHeart || '—')}
+              ${kvRow('Heart findings', emp.appendixFindingsHeart || '—')}
+              ${kvRow('Back & Abdomen', emp.appendixNormalBack || '—')}
+              ${kvRow('Back / Abdomen findings', emp.appendixFindingsBack || '—')}
+              ${kvRow('Genitalia', emp.appendixNormalGenitalia || '—')}
+              ${kvRow('Genitalia findings', emp.appendixFindingsGenitalia || '—')}
+              ${kvRow('Anus / Rectum', emp.appendixNormalAnus || '—')}
+              ${kvRow('Anus / Rectum findings', emp.appendixFindingsAnus || '—')}
+              ${kvRow('Extremities', emp.appendixNormalExtremities || '—')}
+              ${kvRow('Extremities findings', emp.appendixFindingsExtremities || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#7F77DD;"></div>
+              <span class="panel-title">Ancillary Examinations</span>
+            </div>
+            <div class="panel-body">
+              ${kvRow('Complete Blood Count', emp.appendixCBC || '—')}
+              ${kvRow('Fecalysis / Stool', emp.appendixStool || '—')}
+              ${kvRow('Pregnancy Test', emp.appendixPregnancyTest || '—')}
               ${kvRow('Urinalysis', emp.appendixUrinalysis || '—')}
-              ${kvRow('X-ray', emp.appendixXray || '—')}
-              ${kvRow('Hep B', emp.appendixHepB || '—')}
-              ${kvRow('Blood type', emp.appendixBloodType || '—')}
-              ${kvRow('MMSE', emp.appendixMMSE || '—')}
+              ${kvRow('Chest X-Ray', emp.appendixXray || '—')}
+              ${kvRow('Hep B (HBsAg)', emp.appendixHepB || '—')}
+              ${kvRow('Blood Type', emp.appendixBloodType || '—')}
+              ${kvRow('MMSE Score', emp.appendixMMSE || '—')}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#7F77DD;"></div>
+              <span class="panel-title">Employee Classification</span>
+            </div>
+            <div class="panel-body">
+              ${kvRow('Class A — FIT for any work', yesNo(emp.appendixClassA))}
+              ${kvRow('Class B — Corrective defects', yesNo(emp.appendixClassB))}
+              ${kvRow('Class C — Limited duty', yesNo(emp.appendixClassC))}
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div class="panel-dot" style="background:#7F77DD;"></div>
+              <span class="panel-title">Evaluating Personnel Remarks</span>
+            </div>
+            <div class="panel-body">
               ${kvRow('Diagnosis', emp.appendixDiagnosis || '—')}
               ${kvRow('Remarks', emp.appendixRemarks || '—')}
               ${kvRow('School Nurse', emp.appendixSchoolNurse || '—')}
-              ${kvRow('School Nurse License', emp.appendixSchoolNurseLicense || '—')}
-              ${kvRow('Physician', emp.appendixPhysician || '—')}
-              ${kvRow('Physician License', emp.appendixPhysicianLicense || '—')}
+              ${kvRow('Nurse License No.', emp.appendixSchoolNurseLicense || '—')}
+              ${kvRow('School Physician', emp.appendixPhysician || '—')}
+              ${kvRow('Physician License No.', emp.appendixPhysicianLicense || '—')}
               ${kvRow('Date Filed', emp.appendixDateFiled || '—')}
               ${kvRow('File No.', emp.appendixFileNo || '—')}
               ${kvRow('Recorded By', emp.appendixRecordedBy || '—')}
@@ -2067,6 +2280,37 @@ function exportEmployeeProfile(emp) {
               .kv-row:last-child { border-bottom: none; }
               .kv-key { font-size: 12px; color: var(--color-text-secondary); flex-shrink: 0; }
               .kv-val { font-size: 12px; font-weight: 500; text-align: right; }
+              .pv-section-title {
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 0.75rem;
+                color: var(--color-text-primary);
+              }
+              .pv-grid {
+                display: grid;
+                gap: 0.65rem 1rem;
+                margin-top: 0.25rem;
+              }
+              .pv-grid.col1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+              .pv-grid.col2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .pv-grid.col3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+              .pv-field {
+                display: grid;
+                gap: 0.15rem;
+                padding: 0.8rem 0.9rem;
+                border: 0.5px solid var(--color-border-primary);
+                border-radius: 0.45rem;
+                background: var(--color-background-secondary);
+              }
+              .pv-field-label {
+                font-size: 11px;
+                color: var(--color-text-secondary);
+              }
+              .pv-field-value {
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--color-text-primary);
+              }
               .mini-table { width: 100%; border-collapse: collapse; }
               .mini-table th {
                 font-size: 10px;
@@ -2544,7 +2788,7 @@ function exportEmployeeConsultations(emp, consultIndex) {
 }
 
 function exportSelectedEmployee() {
-    const selectedId = exportEmployeeSelect.value;
+    const selectedId = exportEmployeeIdInput.value;
     const exportType = exportTypeSelect.value;
     if (!selectedId) {
         alert('Please select an employee before exporting.');
@@ -2573,7 +2817,7 @@ function openExportModal() {
     exportTypeSelect.value = 'profile';
     exportConsultDateSelect.value = '';
     toggleExportConsultationDateGroup();
-    exportModal.style.display = 'block';
+    exportModal.style.display = 'flex';
 }
 
 function closeExportModal() {
@@ -2584,8 +2828,30 @@ exportTypeSelect.onchange = () => {
     toggleExportConsultationDateGroup();
 };
 
-exportEmployeeSelect.onchange = () => {
+exportEmployeeSearch.addEventListener('input', updateExportEmployeeSearch);
+exportEmployeeSearch.addEventListener('blur', () => {
+    const employeeId = getExportEmployeeIdFromInput();
+    exportEmployeeIdInput.value = employeeId;
     updateExportConsultationDates();
+});
+
+exportEmployeeResults.addEventListener('click', (event) => {
+    const item = event.target.closest('.search-result-item');
+    if (!item || !item.dataset.id) return;
+    selectExportEmployeeResult(item.dataset.id, item.textContent.trim());
+});
+
+// Hide results when clicking outside the result list inside the export modal
+exportModal.addEventListener('click', (event) => {
+    if (event.target === exportModal) {
+        closeExportModal();
+    }
+});
+
+importModal.onclick = (e) => {
+    if (e.target === importModal) {
+        closeImportModal();
+    }
 };
 
 importBtn.onclick = openImportModal;
@@ -2619,9 +2885,22 @@ fileInput.onchange = async (e) => {
 };
 
 function openImportModal() {
-    if (importModal) importModal.style.display = 'block';
+    if (importModal) importModal.style.display = 'flex';
 }
 
 function closeImportModal() {
     if (importModal) importModal.style.display = 'none';
 }
+
+// Add click outside to close modals
+exportModal.onclick = (e) => {
+    if (e.target === exportModal) {
+        closeExportModal();
+    }
+};
+
+importModal.onclick = (e) => {
+    if (e.target === importModal) {
+        closeImportModal();
+    }
+};
