@@ -1079,20 +1079,141 @@ function openConsultationDetail(employeeId, index) {
     const emp = employees.find(e => e.id === employeeId);
     if (!emp || !emp.consultations || !emp.consultations[index]) return;
     const c = emp.consultations[index];
+    
+    // Generate initials for avatar
+    const names = emp.name.split(' ').filter(n => n.trim());
+    const initials = names.map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    
+    const dateTime = (c.date || '-') + (c.time ? ' ' + c.time : '');
+    
+    // Generate prescriptions section if prescriptions exist
+    const prescriptionsHTML = c.prescriptions && c.prescriptions.length > 0 ? `
+            <div class="prescriptions-section">
+                <h4 class="section-title">PRESCRIPTIONS</h4>
+                <div class="prescriptions-list">
+                    ${c.prescriptions.map((rx, rxIdx) => `
+                        <div class="prescription-item-view">
+                            <div class="prescription-header-mini">
+                                <span class="prescription-date-mini">${rx.prescribedOn || 'No date'}</span>
+                                <span class="prescription-count">#${rxIdx + 1}</span>
+                            </div>
+                            <div class="prescription-medicines">
+                                ${rx.medicines && rx.medicines.length > 0 ? rx.medicines.map(m => `
+                                    <div class="medicine-item">
+                                        <strong>${m.name}</strong>
+                                        ${m.details ? `<div class="medicine-details">${m.details}</div>` : ''}
+                                    </div>
+                                `).join('') : '<div class="medicine-item">No medicines recorded</div>'}
+                            </div>
+                            ${rx.note ? `<div class="prescription-note-mini"><strong>Note:</strong> ${rx.note}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : '';
+    
+    // Generate certificates section if certificates exist
+    const certificatesHTML = c.certificates && c.certificates.length > 0 ? `
+            <div class="certificates-section">
+                <h4 class="section-title">MEDICAL CERTIFICATES</h4>
+                <div class="certificates-list">
+                    ${c.certificates.map((cert, certIdx) => `
+                        <div class="certificate-item-view">
+                            <div class="certificate-header-mini">
+                                <span class="certificate-date-mini">${cert.date || 'No date'}</span>
+                                <span class="certificate-count">#${certIdx + 1}</span>
+                            </div>
+                            <div class="certificate-info">
+                                <div class="cert-detail"><strong>Diagnosis:</strong> ${cert.diagnosis || 'Not specified'}</div>
+                                <div class="cert-detail"><strong>Recommendation:</strong> ${cert.recommendation || 'Not specified'}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : '';
+    
     document.getElementById('consultDetailContent').innerHTML = `
-        <h4>${emp.name} (${emp.id})</h4>
-        <div>
-            <strong>Date/Time:</strong> ${c.date || '-'} ${c.time || '-'}<br>
-            <strong>Consult Type:</strong> ${c.consultType || '-'}<br>
-            <strong>Height:</strong> ${c.height || '-'} &nbsp; <strong>Weight:</strong> ${c.weight || '-'}<br>
-            <strong>BP:</strong> ${c.bp || '-'} &nbsp; <strong>HR:</strong> ${c.hr || '-'}<br>
-            <strong>RR:</strong> ${c.rr || '-'} &nbsp; <strong>Temp:</strong> ${c.temp || '-'}
-        </div>
-        <div style="margin-top:10px;"><strong>Complaint:</strong><br>${c.chiefComplaint || '-'}</div>
-        <div style="margin-top:10px;"><strong>Plan:</strong><br>${c.plan || '-'}</div>`;
+        <div class="consult-detail-wrapper">
+            <div class="consult-header-section">
+                <div class="consult-avatar">${initials}</div>
+                <div class="consult-info">
+                    <div class="consult-name-row">
+                        <h3 class="consult-patient-name">${emp.name}</h3>
+                    </div>
+                    <div class="consult-badges">
+                        <span class="emp-id-badge">${emp.id}</span>
+                        <span class="consult-type-badge">${c.consultType || 'N/A'}</span>
+                    </div>
+                </div>
+                <div class="consult-datetime">
+                    <div class="consult-datetime-label">Date & Time</div>
+                    <div class="consult-datetime-value">${dateTime}</div>
+                </div>
+            </div>
+            
+            <div class="vital-signs-section">
+                <h4 class="section-title">VITAL SIGNS</h4>
+                <div class="vital-signs-grid">
+                    <div class="vital-card">
+                        <div class="vital-label">Height</div>
+                        <div class="vital-value">${c.height || '—'} <span class="vital-unit">cm</span></div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Weight</div>
+                        <div class="vital-value">${c.weight || '—'} <span class="vital-unit">kg</span></div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">BP</div>
+                        <div class="vital-value">${c.bp || '—'} <span class="vital-unit">mmHg</span></div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Heart Rate</div>
+                        <div class="vital-value">${c.hr || '—'} <span class="vital-unit">bpm</span></div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Resp. Rate</div>
+                        <div class="vital-value">${c.rr || '—'} <span class="vital-unit">bpm</span></div>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Temperature</div>
+                        <div class="vital-value">${c.temp || '—'} <span class="vital-unit">°C</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="complaint-plan-section">
+                <div class="complaint-box">
+                    <h4 class="section-title">CHIEF COMPLAINT</h4>
+                    <div class="complaint-content">${c.chiefComplaint || '—'}</div>
+                </div>
+                <div class="plan-box">
+                    <h4 class="section-title">PLAN / ADVICE</h4>
+                    <div class="plan-content">${c.plan || '—'}</div>
+                </div>
+            </div>
+            
+            ${prescriptionsHTML}
+            ${certificatesHTML}
+        </div>`;
+    
+    // Update modal footer with Print button
+    const modalFooter = document.querySelector('#consultDetailModal .modal-footer');
+    if (modalFooter) {
+        modalFooter.innerHTML = `
+            <button type="button" class="cancel-btn" onclick="closeConsultDetailModal()">Close</button>
+            <button type="button" class="save-btn" onclick="printConsultationDetail('${employeeId}', ${index})">Print</button>
+        `;
+    }
+    
     document.getElementById('consultDetailModal').style.display = 'block';
 }
 function closeConsultDetailModal() { document.getElementById('consultDetailModal').style.display = 'none'; }
+
+function printConsultationDetail(employeeId, index) {
+    // Trigger the browser's print dialog
+    window.print();
+}
 
 function populateConsultEmployeeOptions() {
     const searchInput = document.getElementById('consultEmployeeSearch');
@@ -1333,6 +1454,114 @@ function renderConsultations() {
         </div>`).join('');
 }
 
+function generateCertificatePDF(certificateData) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPosition = 15;
+    
+    // Header
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Republic of the Philippines', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 7;
+    
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('NORTHERN BUKIDNON STATE COLLEGE', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('Manolo Fortich, 8703 Bukidnon', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 5;
+    
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'italic');
+    doc.text('Creando Futura, Transformationis Vitae, Ductus a Deo', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 12;
+    
+    // Title
+    doc.setFontSize(13);
+    doc.setFont(undefined, 'bold');
+    doc.text('MEDICAL CERTIFICATE', pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 12;
+    
+    // Body
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text('TO WHOM IT MAY CONCERN:', 20, yPosition);
+    yPosition += 8;
+    
+    doc.setFont(undefined, 'normal');
+    const intro = `This is to certify that ${certificateData.fullName}, ${certificateData.age} years old, ${certificateData.gender || 'male/female'} and residing at ${certificateData.address} has been examined and attended at NBSC school clinic by the undersigned.`;
+    const introLines = doc.splitTextToSize(intro, pageWidth - 40);
+    doc.text(introLines, 20, yPosition);
+    yPosition += introLines.length * 5 + 5;
+    
+    // Diagnosis
+    doc.setFont(undefined, 'bold');
+    doc.text('Diagnosis:', 20, yPosition);
+    yPosition += 5;
+    
+    doc.setFont(undefined, 'normal');
+    const diagLines = doc.splitTextToSize(certificateData.diagnosis || 'Essentially normal PE findings', 20, pageWidth - 40);
+    doc.text(diagLines, 25, yPosition);
+    yPosition += diagLines.length * 5 + 5;
+    
+    // Recommendation
+    doc.setFont(undefined, 'bold');
+    doc.text('Recommendation:', 20, yPosition);
+    yPosition += 5;
+    
+    doc.setFont(undefined, 'normal');
+    const recLines = doc.splitTextToSize(certificateData.recommendation || 'Mentally and physically fit', 25, pageWidth - 40);
+    doc.text(recLines, 25, yPosition);
+    yPosition += recLines.length * 5 + 8;
+    
+    // Closing
+    doc.setFont(undefined, 'normal');
+    doc.text('This certification is issued to the above-mentioned name for whatever legal purpose this may serve.', 20, yPosition);
+    yPosition += 8;
+    
+    const dateText = formatCertificateDate(certificateData.date || new Date().toISOString().slice(0, 10));
+    const doneText = `Done this ${dateText} at Northern Bukidnon State College, Kihare, Tankulan, Manolo Fortich, Bukidnon.`;
+    const doneLines = doc.splitTextToSize(doneText, pageWidth - 40);
+    doc.text(doneLines, 20, yPosition);
+    yPosition += doneLines.length * 5 + 15;
+    
+    // Signature section
+    doc.setFont(undefined, 'bold');
+    doc.text('VAL O. ACOSTA, MD', 20, yPosition);
+    yPosition += 6;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text('Attending Physician', 20, yPosition);
+    yPosition += 5;
+    doc.text('License No. 0154636', 20, yPosition);
+    yPosition += 5;
+    doc.text('PTR No. 6215230', 20, yPosition);
+    
+    // Footer
+    yPosition = pageHeight - 10;
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text('Certified on: ' + new Date().toLocaleString(), 20, yPosition);
+    
+    // Generate filename
+    const fileName = `Certificate_${certificateData.fullName.replace(/\\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    
+    // Download PDF
+    doc.save(fileName);
+}
+
+
 const openConsultBtn           = document.getElementById('openConsultBtn');
 const consultModal             = document.getElementById('consultModal');
 const closeConsultModalBtn     = document.getElementById('closeConsultModal');
@@ -1400,21 +1629,199 @@ openCertBtn.onclick = () => {
 closeCertificateModalBtn.onclick = () => { certificateModal.style.display = 'none'; };
 
 printRxBtn.onclick = () => {
-    renderPrescriptionPreview();
-    const rxPrintArea = document.getElementById('rxPrintArea');
-    const certPrintArea = document.getElementById('certificatePrintArea');
-    if (rxPrintArea) rxPrintArea.classList.add('print-active');
-    if (certPrintArea) certPrintArea.classList.remove('print-active');
-    setTimeout(() => window.print(), 50);
+    // Get prescription data
+    const employeeId = document.getElementById('rxEmployeeId').value;
+    const consultDateValue = document.getElementById('rxConsultDate').value;
+    
+    // Gather prescription details
+    const prescriptionData = {
+        fullName: document.getElementById('rxFullName').value.trim(),
+        age: document.getElementById('rxAge').value.trim(),
+        gender: document.getElementById('rxGender').value.trim(),
+        address: document.getElementById('rxAddress').value.trim(),
+        prescribedOn: document.getElementById('rxPrescribedOn').value,
+        medicines: [],
+        note: document.getElementById('rxNote').value.trim(),
+        printedAt: new Date().toISOString()
+    };
+    
+    // Collect medicines
+    for (let i = 1; i <= 3; i++) {
+        const name = document.getElementById(`rxMedName${i}`).value.trim();
+        const details = document.getElementById(`rxMedDetails${i}`).value.trim();
+        if (name) {
+            prescriptionData.medicines.push({ name, details });
+        }
+    }
+    
+    // Save to consultation if selected
+    if (employeeId && consultDateValue) {
+        const [date, time, idx] = consultDateValue.split('||');
+        const employee = employees.find(e => e.id === employeeId);
+        if (employee && Array.isArray(employee.consultations) && employee.consultations[idx]) {
+            if (!employee.consultations[idx].prescriptions) {
+                employee.consultations[idx].prescriptions = [];
+            }
+            employee.consultations[idx].prescriptions.push(prescriptionData);
+            saveEmployees();
+        }
+    }
+    
+    // Generate and download PDF
+    generatePrescriptionPDF(prescriptionData, employeeId);
+    
+    showToast('Prescription saved and PDF downloaded!', 'green');
+    closeRxModal();
 };
 
+function generatePrescriptionPDF(prescriptionData, employeeId) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPosition = 15;
+    
+    // Header
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Val O. Acosta, MD', 20, yPosition);
+    yPosition += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('General Practice', 20, yPosition);
+    yPosition += 5;
+    doc.text('Northern Bukidnon State College', 20, yPosition);
+    yPosition += 5;
+    doc.text('Health Services Office', 20, yPosition);
+    yPosition += 5;
+    doc.text('Kihare, Tankulan Manolo Fortich Bukidnon', 20, yPosition);
+    yPosition += 10;
+    
+    // Prescribed Date
+    doc.setFont(undefined, 'bold');
+    doc.text('Prescribed on: ' + (prescriptionData.prescribedOn || new Date().toLocaleString()), 20, yPosition);
+    yPosition += 12;
+    
+    // Patient Info
+    doc.setFont(undefined, 'bold');
+    doc.text('Patient: ', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(prescriptionData.fullName || '___________________', 50, yPosition);
+    yPosition += 7;
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Age: ', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(prescriptionData.age ? prescriptionData.age + ' years old' : '_______', 50, yPosition);
+    yPosition += 7;
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Gender: ', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(prescriptionData.gender || '_______', 50, yPosition);
+    yPosition += 12;
+    
+    // Rx symbol
+    doc.setFontSize(24);
+    doc.setFont(undefined, 'bold');
+    doc.text('Rx', 20, yPosition);
+    yPosition += 12;
+    
+    // Medicines
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    
+    if (prescriptionData.medicines.length > 0) {
+        prescriptionData.medicines.forEach((med) => {
+            doc.setFont(undefined, 'bold');
+            doc.text('• ' + med.name, 20, yPosition);
+            yPosition += 5;
+            
+            if (med.details) {
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                doc.text('   ' + med.details, 20, yPosition);
+                doc.setFontSize(10);
+                yPosition += 5;
+            }
+            yPosition += 2;
+        });
+    } else {
+        doc.text('No medicines prescribed', 20, yPosition);
+        yPosition += 7;
+    }
+    
+    yPosition += 5;
+    
+    // Note section
+    if (prescriptionData.note) {
+        doc.setFont(undefined, 'bold');
+        doc.text('Note:', 20, yPosition);
+        yPosition += 5;
+        doc.setFont(undefined, 'normal');
+        const noteLines = doc.splitTextToSize(prescriptionData.note, pageWidth - 40);
+        doc.text(noteLines, 20, yPosition);
+        yPosition += noteLines.length * 5 + 5;
+    }
+    
+    // Footer
+    yPosition = pageHeight - 20;
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text('Printed on: ' + new Date().toLocaleString(), 20, yPosition);
+    
+    // Generate filename
+    const fileName = `Prescription_${employeeId || 'Patient'}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    
+    // Download PDF
+    doc.save(fileName);
+}
+
+
 printCertificateBtn.onclick = () => {
-    renderCertificatePreview();
-    const rxPrintArea = document.getElementById('rxPrintArea');
-    const certPrintArea = document.getElementById('certificatePrintArea');
-    if (certPrintArea) certPrintArea.classList.add('print-active');
-    if (rxPrintArea) rxPrintArea.classList.remove('print-active');
-    setTimeout(() => window.print(), 50);
+    // Get certificate data
+    const employeeId = document.getElementById('certEmployeeId').value;
+    const certDate = document.getElementById('certDate').value;
+    
+    // Gather certificate details
+    const certificateData = {
+        fullName: document.getElementById('certFullName').value.trim(),
+        age: document.getElementById('certAge').value.trim(),
+        gender: document.getElementById('certGender').value.trim(),
+        address: document.getElementById('certAddress').value.trim(),
+        diagnosis: document.getElementById('certDiagnosis').value.trim(),
+        recommendation: document.getElementById('certRecommendation').value.trim(),
+        date: certDate,
+        savedAt: new Date().toISOString()
+    };
+    
+    // Save to consultation if employee and date selected
+    if (employeeId && certDate) {
+        const employee = employees.find(e => e.id === employeeId);
+        if (employee && Array.isArray(employee.consultations)) {
+            // Find consultation matching the certificate date
+            const consultation = employee.consultations.find(c => c.date === certDate);
+            if (consultation) {
+                if (!consultation.certificates) {
+                    consultation.certificates = [];
+                }
+                consultation.certificates.push(certificateData);
+                saveEmployees();
+            }
+        }
+    }
+    
+    // Generate and download PDF
+    generateCertificatePDF(certificateData);
+    
+    showToast('Certificate saved and PDF downloaded!', 'green');
+    closeCertificateModal();
 };
 
 function closeCertificateModal() {
@@ -1670,48 +2077,108 @@ const exportConsultDateSelect = document.getElementById('exportConsultDateSelect
 const exportConsultationDateGroup = document.getElementById('exportConsultationDateGroup');
 
 // OCR + Import Function
+// OCR + Import Function
 async function processScannedForm(file, importType = 'consultation') {
-    showToast('Processing scanned form...', 'blue');
-    
-    const { createWorker } = Tesseract;
-    const worker = await createWorker('eng');
-    const { data: { text } } = await worker.recognize(file);
-    await worker.terminate();
-
-    if (importType === 'profile') {
-        const parsedData = extractProfileData(text);
-        return processScannedProfile(parsedData, file);
+    // Validate file
+    if (!file) {
+        throw new Error('No file selected');
     }
-
-    const parsedData = extractFormData(text);
-    let employee = employees.find(e => 
-        e.id === parsedData.id || 
-        e.name.toLowerCase().includes(parsedData.name?.toLowerCase())
-    );
     
-    if (!employee && parsedData.id) {
-        employee = {
-            id: parsedData.id,
-            name: parsedData.name || 'Scanned Employee',
-            class: 'Class A',
-            consultations: []
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+        throw new Error('File size too large (max 10MB)');
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error(`Invalid file type. Allowed: JPG, PNG, GIF, PDF. Got: ${file.type}`);
+    }
+    
+    showToast('Processing scanned form... (This may take a moment)', 'blue');
+    
+    try {
+        if (!window.Tesseract) {
+            throw new Error('Tesseract OCR library not loaded. Please refresh the page.');
+        }
+        
+        const { createWorker } = Tesseract;
+        let worker;
+        try {
+            worker = await createWorker('eng', 1, {
+                workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/worker.min.js'
+            });
+        } catch (e) {
+            throw new Error('Failed to initialize OCR: ' + e.message);
+        }
+        
+        let text = '';
+        try {
+            const { data: result } = await worker.recognize(file);
+            text = result.text || '';
+            
+            if (!text || text.trim().length === 0) {
+                throw new Error('No text detected in image. Try a clearer, better-lit scan.');
+            }
+        } catch (e) {
+            throw new Error('OCR processing failed: ' + e.message);
+        } finally {
+            try {
+                await worker.terminate();
+            } catch (e) {
+                console.warn('Worker termination warning:', e);
+            }
+        }
+
+        if (importType === 'profile') {
+            const parsedData = extractProfileData(text);
+            if (!parsedData || Object.keys(parsedData).length === 0) {
+                throw new Error('Could not parse profile data from scan');
+            }
+            return processScannedProfile(parsedData, file);
+        }
+
+        const parsedData = extractFormData(text);
+        if (!parsedData || Object.keys(parsedData).length === 0) {
+            throw new Error('Could not parse consultation data from scan');
+        }
+        
+        let employee = employees.find(e => 
+            e.id === parsedData.id || 
+            (parsedData.name && e.name.toLowerCase().includes(parsedData.name.toLowerCase()))
+        );
+        
+        if (!employee && parsedData.id) {
+            employee = {
+                id: parsedData.id,
+                name: parsedData.name || 'Scanned Employee',
+                class: 'Class A',
+                consultations: []
+            };
+            employees.unshift(employee);
+        }
+        
+        if (!employee) {
+            throw new Error('Could not match employee from scanned data. Please add employee manually.');
+        }
+        
+        const consultation = {
+            date: parsedData.date || new Date().toISOString().split('T')[0],
+            time: parsedData.time || new Date().toTimeString().slice(0,5),
+            consultType: parsedData.consultType || 'General',
+            height: parsedData.height,
+            weight: parsedData.weight,
+            chiefComplaint: parsedData.complaint || 'From scanned form',
+            plan: parsedData.plan || 'Follow-up needed',
+            bp: parsedData.bp, 
+            hr: parsedData.hr, 
+            rr: parsedData.rr,
+            temp: parsedData.temp,
+            createdAt: new Date().toISOString(),
+            source: 'Scanned Form',
+            scanFile: file.name,
+            ocrText: text.slice(0, 200) + '...'
         };
-        employees.unshift(employee);
-    }
-    
-    const consultation = {
-        date: parsedData.date || new Date().toISOString().split('T')[0],
-        time: parsedData.time || new Date().toTimeString().slice(0,5),
-        chiefComplaint: parsedData.complaint || 'From scanned form',
-        plan: parsedData.plan || 'Follow-up needed',
-        bp: parsedData.bp, hr: parsedData.hr, temp: parsedData.temp,
-        createdAt: new Date().toISOString(),
-        source: 'Scanned Form',
-        scanFile: file.name,
-        ocrText: text.slice(0, 200) + '...'
-    };
-    
-    if (employee) {
+        
         if (!Array.isArray(employee.consultations)) employee.consultations = [];
         employee.consultations.unshift(consultation);
         saveEmployees();
@@ -1719,9 +2186,12 @@ async function processScannedForm(file, importType = 'consultation') {
         populateConsultEmployeeOptions();
         showToast(`✅ Consultation added to ${employee.name}!`, 'green');
         viewEmployee(employee.id);
+        
+        return parsedData;
+    } catch (error) {
+        const errorMsg = error.message || 'Unknown error occurred';
+        throw new Error(errorMsg);
     }
-    
-    return parsedData;
 }
 
 function processScannedProfile(parsedData, file) {

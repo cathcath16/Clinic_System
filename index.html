@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -15,7 +17,7 @@
     <div class="header-left">
         <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="logo" width="40">
         <div>
-            <h2>NBSC School Clinic Platform</h2>
+            <h2>NBSC School Clinic</h2>
             <small>Employee Health Profile — FM-NBSC-HSO-001</small>
         </div>
     </div>
@@ -1415,7 +1417,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="cancel-btn" onclick="closeRxModal()">Close</button>
-                    <button type="button" class="save-btn" id="printRxBtn">Print Prescription</button>
+                    <button type="button" class="save-btn" id="printRxBtn">Save Prescription</button>
                 </div>
             </form>
         </div>

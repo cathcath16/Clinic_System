@@ -492,6 +492,10 @@ tbody tr { background: transparent !important; }
 }
 .form-container { padding: 25px; background: #ffffff; }
 
+#consultDetailContent {
+    padding: 0;
+}
+
 /* --- VIEW CONTENT --- */
 #viewContent {
     display: block;
@@ -657,6 +661,334 @@ tbody tr { background: transparent !important; }
 
 .close { cursor: pointer; font-size: 24px; color: white; line-height: 1; }
 
+/* --- CONSULTATION DETAIL MODAL --- */
+.consult-detail-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.consult-header-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e8ecf1;
+}
+
+.consult-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1f3a6d, #2d5aa8);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.consult-info {
+    flex: 1;
+}
+
+.consult-name-row {
+    margin-bottom: 8px;
+}
+
+.consult-patient-name {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1f3a6d;
+}
+
+.consult-badges {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.emp-id-badge,
+.consult-type-badge {
+    display: inline-block;
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.emp-id-badge {
+    background: #e8f0ff;
+    color: #1f3a6d;
+}
+
+.consult-type-badge {
+    background: #d4f1d4;
+    color: #2e7d32;
+}
+
+.consult-datetime {
+    text-align: right;
+}
+
+.consult-datetime-label {
+    font-size: 0.8rem;
+    color: #667085;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.consult-datetime-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f3a6d;
+}
+
+/* Vital Signs Section */
+.vital-signs-section {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e8ecf1;
+}
+
+.section-title {
+    margin: 0 0 16px 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1f3a6d;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.vital-signs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.vital-card {
+    background: #f8fafb;
+    border: 1px solid #e8ecf1;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.vital-label {
+    font-size: 0.8rem;
+    color: #667085;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.vital-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f3a6d;
+}
+
+.vital-unit {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #667085;
+    margin-left: 4px;
+}
+
+/* Complaint and Plan Section */
+.complaint-plan-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.complaint-box,
+.plan-box {
+    border-left: 4px solid #1f3a6d;
+    padding: 16px;
+    background: #f8fafb;
+    border-radius: 0 8px 8px 0;
+}
+
+.complaint-box {
+    border-left-color: #e74c3c;
+    background: #fdf3f3;
+}
+
+.plan-box {
+    border-left-color: #27ae60;
+    background: #f3fdf7;
+}
+
+.complaint-content,
+.plan-content {
+    font-size: 0.95rem;
+    color: #333;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+/* Prescriptions Section */
+.prescriptions-section {
+    padding-top: 20px;
+    border-top: 1px solid #e8ecf1;
+}
+
+.prescriptions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.prescription-item-view {
+    background: #f8fafb;
+    border: 1px solid #e8ecf1;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.prescription-header-mini {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.prescription-date-mini {
+    font-size: 0.85rem;
+    color: #1f3a6d;
+    font-weight: 600;
+}
+
+.prescription-count {
+    background: #1f3a6d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.prescription-medicines {
+    margin-bottom: 10px;
+}
+
+.medicine-item {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.medicine-item strong {
+    color: #1f3a6d;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.medicine-details {
+    font-size: 0.85rem;
+    color: #666;
+    margin-left: 0;
+    font-style: italic;
+}
+
+.prescription-note-mini {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ddd;
+}
+
+.prescription-note-mini strong {
+    color: #1f3a6d;
+}
+
+/* Certificates Section */
+.certificates-section {
+    padding-top: 20px;
+    border-top: 1px solid #e8ecf1;
+}
+
+.certificates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.certificate-item-view {
+    background: #f8fafb;
+    border: 1px solid #e8ecf1;
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.certificate-header-mini {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.certificate-date-mini {
+    font-size: 0.85rem;
+    color: #1f3a6d;
+    font-weight: 600;
+}
+
+.certificate-count {
+    background: #2e7d32;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.certificate-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cert-detail {
+    font-size: 0.9rem;
+    color: #333;
+    line-height: 1.4;
+}
+
+.cert-detail strong {
+    color: #1f3a6d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .consult-header-section {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .consult-datetime {
+        text-align: left;
+    }
+    
+    .vital-signs-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .complaint-plan-section {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* --- PRINT --- */
 @media print {
     @page { size: portrait; margin: 20mm; }
@@ -664,6 +996,7 @@ tbody tr { background: transparent !important; }
     body * { visibility: hidden; }
     #rxPrintArea.print-active, #rxPrintArea.print-active * { visibility: visible; }
     #viewModal, #viewModal * { visibility: visible; }
+    #consultDetailModal, #consultDetailModal * { visibility: visible; }
     #rxPrintArea.print-active {
         display: block;
         position: absolute;
@@ -674,7 +1007,19 @@ tbody tr { background: transparent !important; }
         margin: 0;
         background: white;
     }
-    #rxModal, #importModal, #addModal, #consultModal, #consultDetailModal { visibility: hidden; }
+    #consultDetailModal {
+        position: static;
+        display: block !important;
+        background: white;
+        width: 100%;
+        height: auto;
+        padding: 20mm;
+        box-shadow: none;
+    }
+    #consultDetailModal .modal-header {
+        display: none;
+    }
+    #rxModal, #importModal, #addModal, #consultModal { visibility: hidden; }
     #viewModal .modal-header, #viewModal .modal-footer { display: none; }
     .step-indicator { display: none; }
 }
