@@ -1112,27 +1112,6 @@ function openConsultationDetail(employeeId, index) {
             </div>
         ` : '';
     
-    // Generate certificates section if certificates exist
-    const certificatesHTML = c.certificates && c.certificates.length > 0 ? `
-            <div class="certificates-section">
-                <h4 class="section-title">MEDICAL CERTIFICATES</h4>
-                <div class="certificates-list">
-                    ${c.certificates.map((cert, certIdx) => `
-                        <div class="certificate-item-view">
-                            <div class="certificate-header-mini">
-                                <span class="certificate-date-mini">${cert.date || 'No date'}</span>
-                                <span class="certificate-count">#${certIdx + 1}</span>
-                            </div>
-                            <div class="certificate-info">
-                                <div class="cert-detail"><strong>Diagnosis:</strong> ${cert.diagnosis || 'Not specified'}</div>
-                                <div class="cert-detail"><strong>Recommendation:</strong> ${cert.recommendation || 'Not specified'}</div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        ` : '';
-    
     document.getElementById('consultDetailContent').innerHTML = `
         <div class="consult-detail-wrapper">
             <div class="consult-header-section">
@@ -1194,7 +1173,6 @@ function openConsultationDetail(employeeId, index) {
             </div>
             
             ${prescriptionsHTML}
-            ${certificatesHTML}
         </div>`;
     
     // Update modal footer with Print button
@@ -1211,8 +1189,111 @@ function openConsultationDetail(employeeId, index) {
 function closeConsultDetailModal() { document.getElementById('consultDetailModal').style.display = 'none'; }
 
 function printConsultationDetail(employeeId, index) {
-    // Trigger the browser's print dialog
-    window.print();
+    const emp = employees.find(e => e.id === employeeId);
+    if (!emp || !emp.consultations || !emp.consultations[index]) return;
+    const c = emp.consultations[index];
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    let yPosition = 15;
+    
+    // Header
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('CONSULTATION DETAILS', 20, yPosition);
+    yPosition += 10;
+    
+    // Patient Info
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(emp.name + ' (' + emp.id + ')', 20, yPosition);
+    yPosition += 8;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('Date/Time: ' + (c.date || '-') + ' ' + (c.time || '-'), 20, yPosition);
+    yPosition += 6;
+    doc.text('Consult Type: ' + (c.consultType || '-'), 20, yPosition);
+    yPosition += 8;
+    
+    // Vital Signs
+    doc.setFont(undefined, 'bold');
+    doc.text('VITAL SIGNS', 20, yPosition);
+    yPosition += 6;
+    
+    doc.setFont(undefined, 'normal');
+    doc.text('Height: ' + (c.height || '-') + ' cm     Weight: ' + (c.weight || '-') + ' kg', 20, yPosition);
+    yPosition += 5;
+    doc.text('BP: ' + (c.bp || '-') + ' mmHg     HR: ' + (c.hr || '-') + ' bpm', 20, yPosition);
+    yPosition += 5;
+    doc.text('RR: ' + (c.rr || '-') + ' bpm     Temp: ' + (c.temp || '-') + ' °C', 20, yPosition);
+    yPosition += 8;
+    
+    // Chief Complaint
+    doc.setFont(undefined, 'bold');
+    doc.text('CHIEF COMPLAINT:', 20, yPosition);
+    yPosition += 5;
+    
+    doc.setFont(undefined, 'normal');
+    const complaintLines = doc.splitTextToSize(c.chiefComplaint || 'None', 170);
+    doc.text(complaintLines, 20, yPosition);
+    yPosition += complaintLines.length * 5 + 3;
+    
+    // Plan
+    doc.setFont(undefined, 'bold');
+    doc.text('PLAN / ADVICE:', 20, yPosition);
+    yPosition += 5;
+    
+    doc.setFont(undefined, 'normal');
+    const planLines = doc.splitTextToSize(c.plan || 'None', 170);
+    doc.text(planLines, 20, yPosition);
+    yPosition += planLines.length * 5 + 5;
+    
+    // Prescriptions
+    if (c.prescriptions && c.prescriptions.length > 0) {
+        doc.setFont(undefined, 'bold');
+        doc.text('PRESCRIPTIONS:', 20, yPosition);
+        yPosition += 5;
+        
+        c.prescriptions.forEach((rx, idx) => {
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(9);
+            doc.text('Prescription #' + (idx + 1) + ' - ' + (rx.prescribedOn || 'No date'), 20, yPosition);
+            yPosition += 4;
+            
+            doc.setFont(undefined, 'normal');
+            if (rx.medicines && rx.medicines.length > 0) {
+                rx.medicines.forEach(m => {
+                    doc.setFontSize(9);
+                    doc.text('• ' + m.name, 25, yPosition);
+                    yPosition += 4;
+                    if (m.details) {
+                        doc.text('  ' + m.details, 25, yPosition);
+                        yPosition += 4;
+                    }
+                });
+            }
+            if (rx.note) {
+                doc.text('Note: ' + rx.note, 25, yPosition);
+                yPosition += 4;
+            }
+            yPosition += 2;
+        });
+    }
+    
+    // Footer
+    doc.setFontSize(8);
+    doc.text('Generated on: ' + new Date().toLocaleString(), 20, doc.internal.pageSize.getHeight() - 10);
+    
+    const fileName = `Consultation_${emp.id}_${c.date || 'NoDate'}.pdf`;
+    doc.save(fileName);
+    
+    showToast('Consultation details saved as PDF!', 'green');
 }
 
 function populateConsultEmployeeOptions() {
@@ -1454,114 +1535,6 @@ function renderConsultations() {
         </div>`).join('');
 }
 
-function generateCertificatePDF(certificateData) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
-    
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 15;
-    
-    // Header
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('Republic of the Philippines', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 7;
-    
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('NORTHERN BUKIDNON STATE COLLEGE', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 7;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('Manolo Fortich, 8703 Bukidnon', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 5;
-    
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'italic');
-    doc.text('Creando Futura, Transformationis Vitae, Ductus a Deo', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 12;
-    
-    // Title
-    doc.setFontSize(13);
-    doc.setFont(undefined, 'bold');
-    doc.text('MEDICAL CERTIFICATE', pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 12;
-    
-    // Body
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'normal');
-    doc.text('TO WHOM IT MAY CONCERN:', 20, yPosition);
-    yPosition += 8;
-    
-    doc.setFont(undefined, 'normal');
-    const intro = `This is to certify that ${certificateData.fullName}, ${certificateData.age} years old, ${certificateData.gender || 'male/female'} and residing at ${certificateData.address} has been examined and attended at NBSC school clinic by the undersigned.`;
-    const introLines = doc.splitTextToSize(intro, pageWidth - 40);
-    doc.text(introLines, 20, yPosition);
-    yPosition += introLines.length * 5 + 5;
-    
-    // Diagnosis
-    doc.setFont(undefined, 'bold');
-    doc.text('Diagnosis:', 20, yPosition);
-    yPosition += 5;
-    
-    doc.setFont(undefined, 'normal');
-    const diagLines = doc.splitTextToSize(certificateData.diagnosis || 'Essentially normal PE findings', 20, pageWidth - 40);
-    doc.text(diagLines, 25, yPosition);
-    yPosition += diagLines.length * 5 + 5;
-    
-    // Recommendation
-    doc.setFont(undefined, 'bold');
-    doc.text('Recommendation:', 20, yPosition);
-    yPosition += 5;
-    
-    doc.setFont(undefined, 'normal');
-    const recLines = doc.splitTextToSize(certificateData.recommendation || 'Mentally and physically fit', 25, pageWidth - 40);
-    doc.text(recLines, 25, yPosition);
-    yPosition += recLines.length * 5 + 8;
-    
-    // Closing
-    doc.setFont(undefined, 'normal');
-    doc.text('This certification is issued to the above-mentioned name for whatever legal purpose this may serve.', 20, yPosition);
-    yPosition += 8;
-    
-    const dateText = formatCertificateDate(certificateData.date || new Date().toISOString().slice(0, 10));
-    const doneText = `Done this ${dateText} at Northern Bukidnon State College, Kihare, Tankulan, Manolo Fortich, Bukidnon.`;
-    const doneLines = doc.splitTextToSize(doneText, pageWidth - 40);
-    doc.text(doneLines, 20, yPosition);
-    yPosition += doneLines.length * 5 + 15;
-    
-    // Signature section
-    doc.setFont(undefined, 'bold');
-    doc.text('VAL O. ACOSTA, MD', 20, yPosition);
-    yPosition += 6;
-    
-    doc.setFont(undefined, 'normal');
-    doc.text('Attending Physician', 20, yPosition);
-    yPosition += 5;
-    doc.text('License No. 0154636', 20, yPosition);
-    yPosition += 5;
-    doc.text('PTR No. 6215230', 20, yPosition);
-    
-    // Footer
-    yPosition = pageHeight - 10;
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
-    doc.text('Certified on: ' + new Date().toLocaleString(), 20, yPosition);
-    
-    // Generate filename
-    const fileName = `Certificate_${certificateData.fullName.replace(/\\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
-    
-    // Download PDF
-    doc.save(fileName);
-}
-
-
 const openConsultBtn           = document.getElementById('openConsultBtn');
 const consultModal             = document.getElementById('consultModal');
 const closeConsultModalBtn     = document.getElementById('closeConsultModal');
@@ -1785,43 +1758,35 @@ function generatePrescriptionPDF(prescriptionData, employeeId) {
 
 
 printCertificateBtn.onclick = () => {
-    // Get certificate data
-    const employeeId = document.getElementById('certEmployeeId').value;
-    const certDate = document.getElementById('certDate').value;
+    renderCertificatePreview();
+    const rxPrintArea = document.getElementById('rxPrintArea');
+    const certPrintArea = document.getElementById('certificatePrintArea');
+    if (certPrintArea) certPrintArea.classList.add('print-active');
+    if (rxPrintArea) rxPrintArea.classList.remove('print-active');
     
-    // Gather certificate details
-    const certificateData = {
-        fullName: document.getElementById('certFullName').value.trim(),
-        age: document.getElementById('certAge').value.trim(),
-        gender: document.getElementById('certGender').value.trim(),
-        address: document.getElementById('certAddress').value.trim(),
-        diagnosis: document.getElementById('certDiagnosis').value.trim(),
-        recommendation: document.getElementById('certRecommendation').value.trim(),
-        date: certDate,
-        savedAt: new Date().toISOString()
-    };
-    
-    // Save to consultation if employee and date selected
-    if (employeeId && certDate) {
-        const employee = employees.find(e => e.id === employeeId);
-        if (employee && Array.isArray(employee.consultations)) {
-            // Find consultation matching the certificate date
-            const consultation = employee.consultations.find(c => c.date === certDate);
-            if (consultation) {
-                if (!consultation.certificates) {
-                    consultation.certificates = [];
-                }
-                consultation.certificates.push(certificateData);
-                saveEmployees();
-            }
-        }
-    }
-    
-    // Generate and download PDF
-    generateCertificatePDF(certificateData);
-    
-    showToast('Certificate saved and PDF downloaded!', 'green');
-    closeCertificateModal();
+    // Generate Certificate PDF
+    setTimeout(() => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+        
+        // For now, use simple certificate format
+        doc.setFontSize(20);
+        doc.setFont(undefined, 'bold');
+        doc.text('MEDICAL CERTIFICATE', 105, 50, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text('This certificate is generated for medical records', 105, 70, { align: 'center' });
+        doc.text('Generated on: ' + new Date().toLocaleString(), 105, doc.internal.pageSize.getHeight() - 20, { align: 'center' });
+        
+        const fileName = `Certificate_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+        showToast('Certificate saved as PDF!', 'green');
+    }, 50);
 };
 
 function closeCertificateModal() {
@@ -2047,7 +2012,55 @@ window.onclick = (event) => {
     if (event.target === document.getElementById('consultDetailModal')) document.getElementById('consultDetailModal').style.display = 'none';
 };
 
-document.getElementById('printProfileBtn').onclick = () => { window.print(); };
+document.getElementById('printProfileBtn').onclick = () => { 
+    saveProfileAsPDF(); 
+};
+
+function saveProfileAsPDF() {
+    const viewModalHeader = document.querySelector('#viewModal .profile-card h3');
+    const employeeId = viewModalHeader ? viewModalHeader.textContent.match(/\(([^)]+)\)/)?.[1] : 'Unknown';
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    const contentElement = document.getElementById('viewContent');
+    if (!contentElement) {
+        alert('Unable to find profile content');
+        return;
+    }
+    
+    // Use html2canvas to capture the content
+    html2canvas(contentElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+    }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * pageWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        doc.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            doc.addPage();
+            doc.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+            heightLeft -= pageHeight;
+        }
+        
+        const fileName = `Employee_Profile_${employeeId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        doc.save(fileName);
+        showToast('Profile saved as PDF!', 'green');
+    });
+}
 
 populateOccupationFilter();
 filteredEmployees = employees;
@@ -2932,10 +2945,39 @@ function exportEmployeeProfile(emp) {
         </html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.print();
-}
-
-function exportEmployeeConsultations(emp, consultIndex) {
+    
+    // Convert to PDF instead of printing
+    setTimeout(() => {
+        html2canvas(printWindow.document.body, {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const { jsPDF } = window.jspdf;
+            const imgData = canvas.toDataURL('image/png');
+            const doc = new jsPDF({orientation: 'portrait', unit: 'mm', format: 'a4'});
+            
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const imgHeight = (canvas.height * pageWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            doc.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                doc.addPage();
+                doc.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            const fileName = `Employee_Profile_${emp.id}_${new Date().toISOString().slice(0, 10)}.pdf`;\n            doc.save(fileName);
+            printWindow.close();
+            showToast('Profile saved as PDF!', 'green');
+        }).catch(err => {
+            console.error('PDF generation error:', err);\n            showToast('Error generating PDF', 'red');\n        });\n    }, 500);\n}\n\nfunction exportEmployeeConsultations(emp, consultIndex) {
     const printWindow = window.open('', '_blank');
     const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0,2).toUpperCase();
     const currentDate = new Date();
@@ -3183,7 +3225,43 @@ function exportEmployeeConsultations(emp, consultIndex) {
         </html>`;
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.print();
+    
+    // Convert to PDF instead of printing
+    setTimeout(() => {
+        html2canvas(printWindow.document.body, {
+            scale: 2,
+            useCORS: true,
+            logging: false
+        }).then(canvas => {
+            const { jsPDF } = window.jspdf;
+            const imgData = canvas.toDataURL('image/png');
+            const doc = new jsPDF({orientation: 'portrait', unit: 'mm', format: 'a4'});
+            
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const imgHeight = (canvas.height * pageWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+            
+            doc.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                doc.addPage();
+                doc.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+            
+            const fileName = `Consultation_Records_${emp.id}_${new Date().toISOString().slice(0, 10)}.pdf`;
+            doc.save(fileName);
+            printWindow.close();
+            showToast('Consultation records saved as PDF!', 'green');
+        }).catch(err => {
+            console.error('PDF generation error:', err);
+            showToast('Error generating PDF', 'red');
+        });
+    }, 500);
 }
 
 function exportSelectedEmployee() {

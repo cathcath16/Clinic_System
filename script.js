@@ -1,30 +1,41 @@
 const tableBody = document.getElementById("tableBody");
 const searchInput = document.getElementById("searchInput");
-const occupationFilter = document.getElementById("occupationFilter");
+const officeFilter = document.getElementById("officeFilter");
+const categoryFilter = document.getElementById("categoryFilter");
 const addModal = document.getElementById("addModal");
 const addNewBtn = document.getElementById("addNewBtn");
 const addForm = document.getElementById("addForm");
 
 function generateSampleEmployees(count = 200) {
-    const lastNames  = ['Aguirre','Bautista','Cruz','Dela Cruz','Enriquez','Flores','Garcia','Herrera','Ibarra','Jimenez','Lopez','Martinez','Nunez','Ortega','Perez','Quinto','Reyes','Santos','Torres','Urbano','Velasco','Wang','Xavier','Yap','Zamora'];
-    const firstNames = ['Aaron','Bea','Carlos','Diana','Ethan','Faith','Gabriel','Hannah','Ian','Jade','Kevin','Liam','Mia','Noah','Olivia','Paul','Quinn','Rafael','Sara','Tina','Victor','Wendy','Xena','Yvonne','Zane'];
-    const middleNames = ['A.','B.','C.','D.','E.','F.','G.','H.','I.','J.','K.','L.','M.','N.','O.','P.','Q.','R.','S.','T.'];
-    const occupations = ['Teacher','Clerk','Security Guard','Nurse','Janitor','Cashier','Counselor','Librarian','Coach','Secretary'];
-    const religions   = ['Catholic','Christian','Iglesia','Islam','None'];
-    const civilStatuses = ['Single','Married','Separated','Widow/Widower'];
-    const classes     = ['Class A','Class B','Class C'];
-    const genders     = ['Male','Female'];
-    const conditions  = ['None', 'Asthma', 'Hypertension', 'Diabetes Mellitus', 'None', 'Allergy'];
+    const lastNames = ['Aguirre', 'Bautista', 'Cruz', 'Dela Cruz', 'Enriquez', 'Flores', 'Garcia', 'Herrera', 'Ibarra', 'Jimenez', 'Lopez', 'Martinez', 'Nunez', 'Ortega', 'Perez', 'Quinto', 'Reyes', 'Santos', 'Torres', 'Urbano', 'Velasco', 'Wang', 'Xavier', 'Yap', 'Zamora'];
+    const firstNames = ['Aaron', 'Bea', 'Carlos', 'Diana', 'Ethan', 'Faith', 'Gabriel', 'Hannah', 'Ian', 'Jade', 'Kevin', 'Liam', 'Mia', 'Noah', 'Olivia', 'Paul', 'Quinn', 'Rafael', 'Sara', 'Tina', 'Victor', 'Wendy', 'Xena', 'Yvonne', 'Zane'];
+    const middleNames = ['A.', 'B.', 'C.', 'D.', 'E.', 'F.', 'G.', 'H.', 'I.', 'J.', 'K.', 'L.', 'M.', 'N.', 'O.', 'P.', 'Q.', 'R.', 'S.', 'T.'];
+    const occupations = ['Teacher', 'Clerk', 'Security Guard', 'Nurse', 'Janitor', 'Cashier', 'Counselor', 'Librarian', 'Coach', 'Secretary'];
+    const religions = ['Catholic', 'Christian', 'Iglesia', 'Islam', 'None'];
+    const civilStatuses = ['Single', 'Married', 'Separated', 'Widow/Widower'];
+    const classes = ['Class A', 'Class B', 'Class C'];
+    const genders = ['Male', 'Female'];
+    const offices = [
+        'Office of the College President',
+        'Human Resource Management and Development Office',
+        'Legal Office',
+        'Health Services Office',
+        'Registar and Record Office',
+        'Institute for Teacher Education',
+        'Institute for Computer Studies',
+        'Institute for Business Management'
+    ];
+    const conditions = ['None', 'Asthma', 'Hypertension', 'Diabetes Mellitus', 'None', 'Allergy'];
     const sample = [];
     for (let i = 1; i <= count; i++) {
-        const last   = lastNames[(i - 1) % lastNames.length];
-        const first  = firstNames[(i - 1) % firstNames.length];
+        const last = lastNames[(i - 1) % lastNames.length];
+        const first = firstNames[(i - 1) % firstNames.length];
         const middle = middleNames[(i - 1) % middleNames.length];
         const gender = genders[i % genders.length];
         const classType = classes[i % classes.length];
-        const year  = 1965 + (i % 35);
+        const year = 1965 + (i % 35);
         const month = String((i % 12) + 1).padStart(2, '0');
-        const day   = String((i % 27) + 1).padStart(2, '0');
+        const day = String((i % 27) + 1).padStart(2, '0');
         sample.push({
             id: `EMP-${String(i).padStart(4, '0')}`,
             name: `${last}, ${first} ${middle}`,
@@ -35,6 +46,8 @@ function generateSampleEmployees(count = 200) {
             occupation: occupations[i % occupations.length],
             civilStatus: civilStatuses[i % civilStatuses.length],
             class: classType,
+            category: ['Regular', 'Job Order', 'Contract of Service'][i % 3],
+            office: offices[i % offices.length],
             condition: conditions[i % conditions.length],
             address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
             emergencyName: `${first} Emergency`,
@@ -62,7 +75,7 @@ function loadConsultations() {
 }
 function saveConsultations() { localStorage.setItem('consultations', JSON.stringify(consultations)); }
 
-let employees     = loadEmployees();
+let employees = loadEmployees();
 let consultations = loadConsultations();
 let filteredEmployees = [];
 let currentPage = 1;
@@ -136,30 +149,34 @@ function sv(id, val) {
 }
 
 function renderTable(data) {
+    if (!tableBody) return;
     const total = data.length;
     const startIndex = (currentPage - 1) * pageSize;
     const pageData = data.slice(startIndex, startIndex + pageSize);
 
     tableBody.innerHTML = '';
     if (!data.length) {
-        tableBody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#aaa;padding:30px;">No records found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="14" style="text-align:center;color:#aaa;padding:30px;">No records found.</td></tr>';
         document.getElementById('paginationInfo').innerText = 'No records found.';
         document.getElementById('paginationPages').innerHTML = '';
         return;
     }
 
+    let rowsHtml = '';
     pageData.forEach(emp => {
         const classStyle = (emp.class || '').replace(' ', '');
-        tableBody.innerHTML += `
+        rowsHtml += `
             <tr>
-                <td style="color:#1f3a6d;font-weight:bold;">${emp.id}</td>
-                <td><strong>${emp.name}</strong></td>
+                <td style="color:#1f3a6d;font-weight:bold;">${emp.id || ''}</td>
+                <td><strong>${emp.name || ''}</strong></td>
                 <td>${emp.birthday || ''}</td>
                 <td>${emp.contact || ''}</td>
                 <td>${emp.religion || ''}</td>
-                <td><span class="gender-tag ${emp.gender}">${emp.gender}</span></td>
-                <td>${emp.age}</td>
+                <td><span class="gender-tag ${emp.gender || ''}">${emp.gender || ''}</span></td>
+                <td>${emp.age || ''}</td>
                 <td>${emp.occupation || ''}</td>
+                <td>${emp.office || ''}</td>
+                <td>${emp.category || ''}</td>
                 <td>${emp.civilStatus || ''}</td>
                 <td><span class="class-tag ${classStyle}">${(emp.class || '').replace('Class ', '')}</span></td>
                 <td>${emp.condition || 'None'}</td>
@@ -170,6 +187,7 @@ function renderTable(data) {
                 </td>
             </tr>`;
     });
+    tableBody.innerHTML = rowsHtml;
 
     renderPagination(total);
 }
@@ -204,41 +222,46 @@ function changePage(page) {
     renderTable(filteredEmployees);
 }
 
-function populateOccupationFilter() {
-    const occupationSet = new Set(employees.map(emp => emp.occupation).filter(Boolean));
-    const occupations = [...occupationSet].sort();
-    occupationFilter.innerHTML = '<option value="All">Sort by</option>' +
-        occupations.map(occ => `<option value="${occ}">${occ}</option>`).join('');
+function populateOfficeFilter() {
+    const newOfficeSelect = document.getElementById('newOffice');
+    if (officeFilter && newOfficeSelect) {
+        const options = Array.from(newOfficeSelect.options)
+            .filter(opt => opt.value && opt.value !== "")
+            .map(opt => `<option value="${opt.value}">${opt.text}</option>`);
+        officeFilter.innerHTML = '<option value="All">All Offices</option>' + options.join('');
+    }
 }
 
 function filterData() {
-    const text   = searchInput.value.toLowerCase();
-    const filter = occupationFilter.value;
+    const text = searchInput.value.toLowerCase();
+    const filter = officeFilter.value;
+    const categoryValue = categoryFilter.value;
     filteredEmployees = sortEmployeesByName(employees.filter(emp => {
-        const matchesText = [emp.name, emp.id, emp.contact, emp.religion, emp.occupation, emp.civilStatus]
+        const matchesText = [emp.name, emp.id, emp.contact, emp.religion, emp.occupation, emp.office, emp.civilStatus, emp.category]
             .some(v => (v || '').toLowerCase().includes(text));
-        const matchesOccupation = filter === 'All' || emp.occupation === filter;
-        return matchesText && matchesOccupation;
+        const matchesOffice = filter === 'All' || emp.office === filter;
+        const matchesCategory = categoryValue === 'All' || emp.category === categoryValue;
+        return matchesText && matchesOffice && matchesCategory;
     }));
     currentPage = 1;
     renderTable(filteredEmployees);
 }
 
 function updateStats() {
-    const classAList = employees.filter(e => e.class === 'Class A');
-    const classBList = employees.filter(e => e.class === 'Class B');
-    const classCList = employees.filter(e => e.class === 'Class C');
+    const regularList = employees.filter(e => e.category === 'Regular');
+    const jobOrderList = employees.filter(e => e.category === 'Job Order');
+    const contractList = employees.filter(e => e.category === 'Contract of Service');
     document.getElementById('count-total').innerText = employees.length;
-    document.getElementById('count-a').innerText     = classAList.length;
-    document.getElementById('count-b').innerText     = classBList.length;
-    document.getElementById('count-c').innerText     = classCList.length;
+    document.getElementById('count-regular').innerText = regularList.length;
+    document.getElementById('count-joborder').innerText = jobOrderList.length;
+    document.getElementById('count-contract').innerText = contractList.length;
     document.getElementById('total-count').innerText = employees.length;
-    document.getElementById('names-a').innerText = classAList.slice(0,5).map(e => e.name).join(', ') + (classAList.length > 5 ? '...' : '') || 'No records';
-    document.getElementById('names-b').innerText = classBList.slice(0,5).map(e => e.name).join(', ') + (classBList.length > 5 ? '...' : '') || 'No records';
-    document.getElementById('names-c').innerText = classCList.slice(0,5).map(e => e.name).join(', ') + (classCList.length > 5 ? '...' : '') || 'No records';
+    document.getElementById('names-regular').innerText = regularList.slice(0, 5).map(e => e.name).join(', ') + (regularList.length > 5 ? '...' : '') || 'No records';
+    document.getElementById('names-joborder').innerText = jobOrderList.slice(0, 5).map(e => e.name).join(', ') + (jobOrderList.length > 5 ? '...' : '') || 'No records';
+    document.getElementById('names-contract').innerText = contractList.slice(0, 5).map(e => e.name).join(', ') + (contractList.length > 5 ? '...' : '') || 'No records';
 }
 
-let lastDeleted   = null;
+let lastDeleted = null;
 let undoTimeoutId = null;
 function showUndoBar() {
     document.getElementById('undoBar').style.display = 'flex';
@@ -273,15 +296,15 @@ function deleteEmployee(id) {
 }
 
 let currentStep = 0;
-const steps     = document.querySelectorAll('.step');
-const prevBtn   = document.getElementById('prevBtn');
-const nextBtn   = document.getElementById('nextBtn');
+const steps = document.querySelectorAll('.step');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
 const submitBtn = document.getElementById('submitBtn');
 
 function showStep(n) {
     steps.forEach((step, i) => step.classList.toggle('active', i === n));
-    prevBtn.style.display   = n === 0 ? 'none' : 'inline-block';
-    nextBtn.style.display   = n === steps.length - 1 ? 'none' : 'inline-block';
+    prevBtn.style.display = n === 0 ? 'none' : 'inline-block';
+    nextBtn.style.display = n === steps.length - 1 ? 'none' : 'inline-block';
     submitBtn.style.display = n === steps.length - 1 ? 'inline-block' : 'none';
     updateStepIndicator(n);
 }
@@ -307,7 +330,7 @@ function changeStep(delta) {
 }
 
 let isEditMode = false;
-let editId     = null;
+let editId = null;
 
 function openModalForNew() {
     isEditMode = false; editId = null;
@@ -323,6 +346,7 @@ function setFormValues(emp) {
     sv('newAge', emp.age); sv('newGender', emp.gender); sv('newContact', emp.contact);
     sv('newReligion', emp.religion); sv('newOccupation', emp.occupation);
     sv('newCivilStatus', emp.civilStatus); sv('newClass', emp.class || 'Class A');
+    sv('newCategory', emp.category); sv('newOffice', emp.office);
     sv('newAddress', emp.address); sv('newCondition', emp.condition);
     sv('emergencyName', emp.emergencyName); sv('emergencyRelationship', emp.emergencyRelationship);
     sv('emergencyAddress', emp.emergencyAddress); sv('emergencyContact', emp.emergencyContact);
@@ -436,6 +460,7 @@ function collectFormValues(existingEmp) {
         age: gv('newAge'), gender: gv('newGender'), contact: gv('newContact'),
         religion: gv('newReligion'), occupation: gv('newOccupation'),
         civilStatus: gv('newCivilStatus'), class: gv('newClass') || 'Class A',
+        category: gv('newCategory'), office: gv('newOffice'),
         address: gv('newAddress'), condition: gv('newCondition'),
         emergencyName: gv('emergencyName'), emergencyRelationship: gv('emergencyRelationship'),
         emergencyAddress: gv('emergencyAddress'), emergencyContact: gv('emergencyContact'),
@@ -639,7 +664,7 @@ const PROFILE_CSS = `<style>
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function pvField(label, value, spanClass) {
     const hasVal = value !== null && value !== undefined && String(value).trim() !== '';
-    const span   = spanClass ? ` ${spanClass}` : '';
+    const span = spanClass ? ` ${spanClass}` : '';
     return `<div class="pv-field${span}">
         <p class="pv-label">${label}</p>
         <p class="pv-value${hasVal ? '' : ' empty'}">${hasVal ? value : '—'}</p>
@@ -687,9 +712,9 @@ function viewEmployee(id) {
 
 function toggleView(type) {
     const basicContent = document.getElementById('basicViewContent');
-    const fullContent  = document.getElementById('fullViewContent');
-    const basicBtn     = document.getElementById('basicViewBtn');
-    const fullBtn      = document.getElementById('fullViewBtn');
+    const fullContent = document.getElementById('fullViewContent');
+    const basicBtn = document.getElementById('basicViewBtn');
+    const fullBtn = document.getElementById('fullViewBtn');
     if (type === 'basic') {
         basicContent.style.display = 'block'; fullContent.style.display = 'none';
         basicBtn.classList.add('active'); fullBtn.classList.remove('active');
@@ -703,15 +728,15 @@ function toggleView(type) {
 // BASIC VIEW
 // ─────────────────────────────────────────
 function renderBasicView(emp) {
-    const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0,2).toUpperCase();
+    const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0, 2).toUpperCase();
     const classKey = (emp.class || '').replace('Class ', '');
     const flags = [
         emp.pmHypertension && { label: 'Hypertension', cls: 'warn' },
-        emp.pmDiabetes     && { label: 'Diabetes',     cls: 'warn' },
-        emp.pmAsthma       && { label: 'Asthma',       cls: 'info' },
-        emp.pmTB           && { label: 'TB',            cls: 'danger' },
-        emp.pmHepatitis    && { label: 'Hepatitis',     cls: 'danger' },
-        emp.pmCancer       && { label: 'Cancer',        cls: 'danger' },
+        emp.pmDiabetes && { label: 'Diabetes', cls: 'warn' },
+        emp.pmAsthma && { label: 'Asthma', cls: 'info' },
+        emp.pmTB && { label: 'TB', cls: 'danger' },
+        emp.pmHepatitis && { label: 'Hepatitis', cls: 'danger' },
+        emp.pmCancer && { label: 'Cancer', cls: 'danger' },
     ].filter(Boolean);
 
     document.getElementById('basicViewContent').innerHTML = `
@@ -727,26 +752,28 @@ function renderBasicView(emp) {
             </div>
 
             ${pvSection('Personal Info',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Birthday', emp.birthday)}
                     ${pvField('Age', emp.age)}
                     ${pvField('Gender', emp.gender)}
                     ${pvField('Civil Status', emp.civilStatus)}
+                    ${pvField('Category', emp.category)}
+                    ${pvField('Office', emp.office, 'span2')}
                     ${pvField('Contact', emp.contact)}
                     ${pvField('Religion', emp.religion)}
                     ${pvField('Home Address', emp.address, 'span3')}
                 `)
-            )}
+    )}
 
             ${pvSection('Emergency & Lifestyle',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Emergency Contact', emp.emergencyName ? `${emp.emergencyName} — ${emp.emergencyContact || '-'}` : null, 'span2')}
                     ${pvField('Relationship', emp.emergencyRelationship)}
                     ${pvField('Smoking', [emp.smoking, emp.smokingPack ? `(${emp.smokingPack})` : ''].filter(Boolean).join(' '))}
-                    ${pvField('Alcohol',  [emp.alcohol,  emp.alcoholDetails ? `(${emp.alcoholDetails})` : ''].filter(Boolean).join(' '))}
+                    ${pvField('Alcohol', [emp.alcohol, emp.alcoholDetails ? `(${emp.alcoholDetails})` : ''].filter(Boolean).join(' '))}
                     ${pvField('Drugs', emp.drugs)}
                 `)
-            )}
+    )}
 
             ${flags.length ? `
                 <div class="pv-section">
@@ -759,12 +786,12 @@ function renderBasicView(emp) {
             <div class="pv-section">
                 <p class="pv-section-title">Consultation History</p>
                 ${emp.consultations && emp.consultations.length
-                    ? emp.consultations.map((c, idx) => `
+            ? emp.consultations.map((c, idx) => `
                         <button class="pv-consult-row" onclick="openConsultationDetail('${emp.id}', ${idx})">
                             <p class="pv-consult-date">${c.date || '-'} ${c.time || ''}</p>
                             <p class="pv-consult-complaint">${c.chiefComplaint || 'No complaint recorded'}</p>
                         </button>`).join('')
-                    : `<p class="pv-empty-note">No consultations recorded.</p>`}
+            : `<p class="pv-empty-note">No consultations recorded.</p>`}
             </div>
         </div>`;
 }
@@ -778,7 +805,7 @@ function renderFullProfileView(emp) {
         <div class="pv-wrap">
 
             ${pvSection('I. Personal Information',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Employee ID', emp.id)}
                     ${pvField('Full Name', emp.name)}
                     ${pvField('Birthday', emp.birthday)}
@@ -788,22 +815,24 @@ function renderFullProfileView(emp) {
                     ${pvField('Religion', emp.religion)}
                     ${pvField('Occupation', emp.occupation)}
                     ${pvField('Civil Status', emp.civilStatus)}
+                    ${pvField('Category', emp.category)}
+                    ${pvField('Type of Office', emp.office, 'span2')}
                     ${pvField('Classification', emp.class)}
                     ${pvField('Home Address', emp.address, 'span2')}
                 `)
-            )}
+    )}
 
             ${pvSection('II. Emergency Contact',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Complete Name', emp.emergencyName)}
                     ${pvField('Relationship', emp.emergencyRelationship)}
                     ${pvField('Contact Number', emp.emergencyContact)}
                     ${pvField('Address', emp.emergencyAddress, 'span3')}
                 `)
-            )}
+    )}
 
             ${pvSection('III. Social History',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Smoking', emp.smoking)}
                     ${pvField('Pack/Day or Years', emp.smokingPack)}
                     ${pvField('Alcohol Drinking', emp.alcohol)}
@@ -813,7 +842,7 @@ function renderFullProfileView(emp) {
                     ${pvField('No. of Partners This Year', emp.sexPartners)}
                     ${pvField('Partners Gender', emp.sexPartnerGender)}
                 `)
-            )}
+    )}
 
             <div class="pv-section">
                 <p class="pv-section-title">IV. Medical History</p>
@@ -839,7 +868,7 @@ function renderFullProfileView(emp) {
             </div>
 
             ${pvSection('V. Hospital & Surgical History',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Hospital Diagnosis 1', emp.hospitalDiagnosis1)}
                     ${pvField('When', emp.hospitalWhen1)}
                     <div></div>
@@ -856,14 +885,14 @@ function renderFullProfileView(emp) {
                     ${pvField('Registration Status', emp.disabilityRegistered)}
                     ${pvField('Willing to Donate Blood', emp.donateBlood)}
                 `)
-            )}
+    )}
 
             ${pvSection('VI. Family History & Immunization',
-                pvGrid(2, `
+        pvGrid(2, `
                     ${pvField('Mother Side History', emp.familyHistoryMother)}
                     ${pvField('Father Side History', emp.familyHistoryFather)}
                 `) +
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Newborn Immunization', emp.newbornImmunization)}
                     ${pvField('COVID-19 Vaccinated', emp.newCovidVax)}
                     ${pvField('HPV Doses', emp.hpvDoses)}
@@ -879,10 +908,10 @@ function renderFullProfileView(emp) {
                     ${pvField('Booster 2', emp.covidBooster2)}
                     ${pvField('Unvaccinated Reason', emp.covidUnvaccinatedReason)}
                 `)
-            )}
+    )}
 
             ${pvSection('VII. Medications & OB/GYNE',
-                pvGrid(3, `
+        pvGrid(3, `
                     ${pvField('Maintenance Medication', emp.maintenanceMedication, 'span3')}
                     ${pvField('OB/GYNE Notes', emp.obGynNotes, 'span3')}
                     ${pvField('Menarche', emp.menarche)}
@@ -913,86 +942,86 @@ function renderFullProfileView(emp) {
                     ${pvField('Family Planning Type', emp.familyPlanningType)}
                     ${pvField('No. of Years', emp.familyPlanningYears)}
                 `)
-            )}
+    )}
 
             <div class="pv-section">
                 <p class="pv-section-title">VIII. Physical Assessment</p>
 
                 <p class="pv-subsection">Neurological</p>
                 ${pvCheckedGroup([
-                    { name: 'Normal thought processes',    val: emp.neuroNormalThought },
-                    { name: 'Normal emotional status',     val: emp.neuroNormalEmotional },
-                    { name: 'Normal psychological status', val: emp.neuroNormalPsych },
-                ])}
+        { name: 'Normal thought processes', val: emp.neuroNormalThought },
+        { name: 'Normal emotional status', val: emp.neuroNormalEmotional },
+        { name: 'Normal psychological status', val: emp.neuroNormalPsych },
+    ])}
                 ${pvGrid(3, `${pvField('How do you feel?', emp.neuroHowFeel)} ${pvField('Others', emp.neuroOthers)}`)}
 
                 <p class="pv-subsection">HEENT</p>
                 ${pvCheckedGroup([
-                    { name: 'Anicteric Sclerae',             val: emp.heentAnictericSclerae },
-                    { name: 'PERLA',                         val: emp.heentPerla },
-                    { name: 'Aural Discharge',               val: emp.heentAuralDischarge },
-                    { name: 'Intact Tympanic Membrane',      val: emp.heentIntactTympanic },
-                    { name: 'Nasal Flaring',                 val: emp.heentNasalFlaring },
-                    { name: 'Nasal Discharge',               val: emp.heentNasalDischarge },
-                    { name: 'Tonsillopharyngeal Congestion', val: emp.heentTonsillopharyngealCongestion },
-                    { name: 'Hypertrophic Tonsils',          val: emp.heentHypertropicTonsils },
-                    { name: 'Palpable Mass',                 val: emp.heentPalpableMass },
-                    { name: 'Exudates',                      val: emp.heentExudates },
-                ])}
+        { name: 'Anicteric Sclerae', val: emp.heentAnictericSclerae },
+        { name: 'PERLA', val: emp.heentPerla },
+        { name: 'Aural Discharge', val: emp.heentAuralDischarge },
+        { name: 'Intact Tympanic Membrane', val: emp.heentIntactTympanic },
+        { name: 'Nasal Flaring', val: emp.heentNasalFlaring },
+        { name: 'Nasal Discharge', val: emp.heentNasalDischarge },
+        { name: 'Tonsillopharyngeal Congestion', val: emp.heentTonsillopharyngealCongestion },
+        { name: 'Hypertrophic Tonsils', val: emp.heentHypertropicTonsils },
+        { name: 'Palpable Mass', val: emp.heentPalpableMass },
+        { name: 'Exudates', val: emp.heentExudates },
+    ])}
 
                 <p class="pv-subsection">Respiratory</p>
                 ${pvCheckedGroup([
-                    { name: 'Normal Breath Sounds',        val: emp.respNormalBreathSounds },
-                    { name: 'Symmetrical Chest Expansion', val: emp.respSymChestExpansion },
-                    { name: 'Retractions',                 val: emp.respRetractions },
-                    { name: 'Crackles/Rales',              val: emp.respCracklesRates },
-                    { name: 'Wheezing',                    val: emp.respWheezing },
-                    { name: 'Clear Breath Sounds',         val: emp.respClearBreathSounds },
-                ])}
+        { name: 'Normal Breath Sounds', val: emp.respNormalBreathSounds },
+        { name: 'Symmetrical Chest Expansion', val: emp.respSymChestExpansion },
+        { name: 'Retractions', val: emp.respRetractions },
+        { name: 'Crackles/Rales', val: emp.respCracklesRates },
+        { name: 'Wheezing', val: emp.respWheezing },
+        { name: 'Clear Breath Sounds', val: emp.respClearBreathSounds },
+    ])}
 
                 <p class="pv-subsection">Cardiovascular</p>
                 ${pvCheckedGroup([
-                    { name: 'Normal Heartbeat',     val: emp.cardioNormalHeartBeat },
-                    { name: 'Clubbing of Fingers',  val: emp.cardioClubbing },
-                    { name: 'Finger Discoloration', val: emp.cardioFingerDiscoloration },
-                    { name: 'Heart Murmur',         val: emp.cardioHeartMurmur },
-                    { name: 'Irregular Heartbeat',  val: emp.cardioIrregularHeartBeat },
-                    { name: 'Palpitations',         val: emp.cardioPalpitations },
-                    { name: 'Fluid Volume Excess',  val: emp.cardioFluidVolumeExcess },
-                    { name: 'Fatigue on Mobility',  val: emp.cardioFatigueMobility },
-                ])}
+        { name: 'Normal Heartbeat', val: emp.cardioNormalHeartBeat },
+        { name: 'Clubbing of Fingers', val: emp.cardioClubbing },
+        { name: 'Finger Discoloration', val: emp.cardioFingerDiscoloration },
+        { name: 'Heart Murmur', val: emp.cardioHeartMurmur },
+        { name: 'Irregular Heartbeat', val: emp.cardioIrregularHeartBeat },
+        { name: 'Palpitations', val: emp.cardioPalpitations },
+        { name: 'Fluid Volume Excess', val: emp.cardioFluidVolumeExcess },
+        { name: 'Fatigue on Mobility', val: emp.cardioFatigueMobility },
+    ])}
 
                 <p class="pv-subsection">Gastrointestinal</p>
                 ${pvCheckedGroup([
-                    { name: 'Regular Bowel Movement', val: emp.giRegularBowel },
-                    { name: 'Constipation',           val: emp.giConstipation },
-                    { name: 'Loose Bowel Movement',   val: emp.giLooseBowel },
-                    { name: 'Hyperacidity',           val: emp.giHyperacidity },
-                ])}
+        { name: 'Regular Bowel Movement', val: emp.giRegularBowel },
+        { name: 'Constipation', val: emp.giConstipation },
+        { name: 'Loose Bowel Movement', val: emp.giLooseBowel },
+        { name: 'Hyperacidity', val: emp.giHyperacidity },
+    ])}
                 ${pvGrid(3, `${pvField('Bowel per day', emp.giBowelPerDay)} ${pvField('Borborygmi', emp.giBorborygmi)}`)}
 
                 <p class="pv-subsection">Urinary</p>
                 ${pvCheckedGroup([
-                    { name: 'Flank Pain',        val: emp.urinaryFlankPain },
-                    { name: 'Painful Urination', val: emp.urinaryPainful },
-                ])}
+        { name: 'Flank Pain', val: emp.urinaryFlankPain },
+        { name: 'Painful Urination', val: emp.urinaryPainful },
+    ])}
                 ${pvGrid(3, `${pvField('Urination per day', emp.urinaryFrequency)} ${pvField('Amount per voiding', emp.urinaryAmountPerVoiding)}`)}
 
                 <p class="pv-subsection">Integumentary</p>
                 ${pvCheckedGroup([
-                    { name: 'Pallor',           val: emp.integPallor },
-                    { name: 'Rashes',           val: emp.integRashes },
-                    { name: 'Jaundice',         val: emp.integJaundice },
-                    { name: 'Good Skin Turgor', val: emp.integSkinTurgor },
-                    { name: 'Cyanosis',         val: emp.integCyanosis },
-                ])}
+        { name: 'Pallor', val: emp.integPallor },
+        { name: 'Rashes', val: emp.integRashes },
+        { name: 'Jaundice', val: emp.integJaundice },
+        { name: 'Good Skin Turgor', val: emp.integSkinTurgor },
+        { name: 'Cyanosis', val: emp.integCyanosis },
+    ])}
 
                 <p class="pv-subsection">Extremities</p>
                 ${pvCheckedGroup([
-                    { name: 'Gross Deformity', val: emp.extegGrossDeformity },
-                    { name: 'Normal Gait',     val: emp.extegNormalGait },
-                    { name: 'Normal Strength', val: emp.extegNormalStrength },
-                ])}
+        { name: 'Gross Deformity', val: emp.extegGrossDeformity },
+        { name: 'Normal Gait', val: emp.extegNormalGait },
+        { name: 'Normal Strength', val: emp.extegNormalStrength },
+    ])}
                 ${pvGrid(3, `${pvField('Others', emp.extegOthers)}`)}
                 ${pvGrid(1, `${pvField('Other Pertinent Findings', emp.assessmentOtherFindings)}`)}
             </div>
@@ -1000,11 +1029,11 @@ function renderFullProfileView(emp) {
             <div class="pv-section">
                 <p class="pv-section-title">IX. Physical Examination — Appendix A</p>
                 <div class="pv-vitals-row">
-                    ${[['Height','appendixHeight','cm'],['Weight','appendixWeight','kg'],
-                       ['Blood Pressure','appendixBP',''],['Pulse Rate','appendixPulse','bpm'],
-                       ['Respiration','appendixRespiration',''],['SpO2','appendixSpO2','%'],
-                       ['BMI','appendixBMI',''],['BMI Class','appendixBMIClass','']
-                      ].map(([lbl, key, unit]) => `
+                    ${[['Height', 'appendixHeight', 'cm'], ['Weight', 'appendixWeight', 'kg'],
+        ['Blood Pressure', 'appendixBP', ''], ['Pulse Rate', 'appendixPulse', 'bpm'],
+        ['Respiration', 'appendixRespiration', ''], ['SpO2', 'appendixSpO2', '%'],
+        ['BMI', 'appendixBMI', ''], ['BMI Class', 'appendixBMIClass', '']
+        ].map(([lbl, key, unit]) => `
                         <div class="pv-vital">
                             <p class="pv-vital-label">${lbl}</p>
                             <p class="pv-vital-val">${emp[key] ? emp[key] + (unit ? ' ' + unit : '') : '—'}</p>
@@ -1024,20 +1053,20 @@ function renderFullProfileView(emp) {
 
                 <p class="pv-subsection">Physical Examination Findings</p>
                 ${pvGrid(3, `
-                    ${peField('Skin',                   emp.appendixNormalSkin,        emp.appendixFindingsSkin)}
-                    ${peField('Head / Neck / Scalp',    emp.appendixNormalHead,        emp.appendixFindingsHead)}
-                    ${peField('Eyes (External)',         emp.appendixNormalEyes,        emp.appendixFindingsEyes)}
-                    ${peField('Pupils',                 emp.appendixNormalPupils,      emp.appendixFindingsPupils)}
-                    ${peField('Ears / Nose / Sinuses',  emp.appendixNormalEars,        emp.appendixFindingsEars)}
-                    ${peField('Mouth / Throat',         emp.appendixNormalMouth,       emp.appendixFindingsMouth)}
-                    ${peField('Neck / Lymph / Thyroid', emp.appendixNormalNeck,        emp.appendixFindingsNeck)}
-                    ${peField('Chest / Breast / Axilla',emp.appendixNormalChest,       emp.appendixFindingsChest)}
-                    ${peField('Lungs',                  emp.appendixNormalLungs,       emp.appendixFindingsLungs)}
-                    ${peField('Heart & Valvular',       emp.appendixNormalHeart,       emp.appendixFindingsHeart)}
-                    ${peField('Back & Abdomen',         emp.appendixNormalBack,        emp.appendixFindingsBack)}
-                    ${peField('Genitalia',              emp.appendixNormalGenitalia,   emp.appendixFindingsGenitalia)}
-                    ${peField('Anus / Rectum',          emp.appendixNormalAnus,        emp.appendixFindingsAnus)}
-                    ${peField('Extremities',            emp.appendixNormalExtremities, emp.appendixFindingsExtremities)}
+                    ${peField('Skin', emp.appendixNormalSkin, emp.appendixFindingsSkin)}
+                    ${peField('Head / Neck / Scalp', emp.appendixNormalHead, emp.appendixFindingsHead)}
+                    ${peField('Eyes (External)', emp.appendixNormalEyes, emp.appendixFindingsEyes)}
+                    ${peField('Pupils', emp.appendixNormalPupils, emp.appendixFindingsPupils)}
+                    ${peField('Ears / Nose / Sinuses', emp.appendixNormalEars, emp.appendixFindingsEars)}
+                    ${peField('Mouth / Throat', emp.appendixNormalMouth, emp.appendixFindingsMouth)}
+                    ${peField('Neck / Lymph / Thyroid', emp.appendixNormalNeck, emp.appendixFindingsNeck)}
+                    ${peField('Chest / Breast / Axilla', emp.appendixNormalChest, emp.appendixFindingsChest)}
+                    ${peField('Lungs', emp.appendixNormalLungs, emp.appendixFindingsLungs)}
+                    ${peField('Heart & Valvular', emp.appendixNormalHeart, emp.appendixFindingsHeart)}
+                    ${peField('Back & Abdomen', emp.appendixNormalBack, emp.appendixFindingsBack)}
+                    ${peField('Genitalia', emp.appendixNormalGenitalia, emp.appendixFindingsGenitalia)}
+                    ${peField('Anus / Rectum', emp.appendixNormalAnus, emp.appendixFindingsAnus)}
+                    ${peField('Extremities', emp.appendixNormalExtremities, emp.appendixFindingsExtremities)}
                 `)}
 
                 <p class="pv-subsection">Ancillary Examinations</p>
@@ -1087,13 +1116,13 @@ function openConsultationDetail(employeeId, index) {
     const emp = employees.find(e => e.id === employeeId);
     if (!emp || !emp.consultations || !emp.consultations[index]) return;
     const c = emp.consultations[index];
-    
+
     // Generate initials for avatar
     const names = emp.name.split(' ').filter(n => n.trim());
     const initials = names.map(n => n[0]).slice(0, 2).join('').toUpperCase();
-    
+
     const dateTime = (c.date || '-') + (c.time ? ' ' + c.time : '');
-    
+
     // Generate prescriptions section if prescriptions exist
     const prescriptionsHTML = c.prescriptions && c.prescriptions.length > 0 ? `
             <div class="prescriptions-section">
@@ -1119,7 +1148,7 @@ function openConsultationDetail(employeeId, index) {
                 </div>
             </div>
         ` : '';
-    
+
     document.getElementById('consultDetailContent').innerHTML = `
         <div class="consult-detail-wrapper">
             <div class="consult-header-section">
@@ -1130,7 +1159,8 @@ function openConsultationDetail(employeeId, index) {
                     </div>
                     <div class="consult-badges">
                         <span class="emp-id-badge">${emp.id}</span>
-                        <span class="consult-type-badge">${c.consultType || 'N/A'}</span>
+                        <span class="consult-type-badge">${c.consultCategory || 'N/A'}</span>
+                        <span class="consult-type-badge" style="background:#e0e7ff;color:#1f3a6d;">${c.consultOffice || 'N/A'}</span>
                     </div>
                 </div>
                 <div class="consult-datetime">
@@ -1182,7 +1212,7 @@ function openConsultationDetail(employeeId, index) {
             
             ${prescriptionsHTML}
         </div>`;
-    
+
     // Update modal footer with Print button
     const modalFooter = document.querySelector('#consultDetailModal .modal-footer');
     if (modalFooter) {
@@ -1191,7 +1221,7 @@ function openConsultationDetail(employeeId, index) {
             <button type="button" class="save-btn" onclick="printConsultationDetail('${employeeId}', ${index})">Print</button>
         `;
     }
-    
+
     document.getElementById('consultDetailModal').style.display = 'block';
 }
 function closeConsultDetailModal() { document.getElementById('consultDetailModal').style.display = 'none'; }
@@ -1274,16 +1304,22 @@ function updateConsultEmployeeSelection() {
 
 function fillConsultEmployeeFields(emp) {
     const nameParts = emp.name.split(',').map(s => s.trim());
-    document.getElementById('consultFamilyName').value  = nameParts[0] || '';
+    document.getElementById('consultFamilyName').value = nameParts[0] || '';
     const restParts = (nameParts[1] || '').split(' ').filter(Boolean);
-    document.getElementById('consultFirstName').value   = restParts[0] || '';
-    document.getElementById('consultMiddleName').value  = restParts.slice(1).join(' ') || '';
-    document.getElementById('consultSex').value         = emp.gender || '';
+    document.getElementById('consultFirstName').value = restParts[0] || '';
+    document.getElementById('consultMiddleName').value = restParts.slice(1).join(' ') || '';
+    document.getElementById('consultSex').value = emp.gender || '';
     document.getElementById('consultCivilStatus').value = emp.civilStatus || '';
-    document.getElementById('consultPhone').value       = emp.contact || '';
-    document.getElementById('consultAge').value         = emp.age || '';
-    document.getElementById('consultBday').value        = emp.birthday || '';
-    document.getElementById('consultAddress').value     = emp.address || '';
+    document.getElementById('consultPhone').value = emp.contact || '';
+    document.getElementById('consultAge').value = emp.age || '';
+    document.getElementById('consultBday').value = emp.birthday || '';
+    document.getElementById('consultAddress').value = emp.address || '';
+    
+    // Connect Category and Office
+    const consultCategory = document.getElementById('consultCategory');
+    const consultOffice = document.getElementById('consultOffice');
+    if (consultCategory) consultCategory.value = emp.category || '';
+    if (consultOffice) consultOffice.value = emp.office || '';
 }
 
 function renderConsultations() {
@@ -1292,20 +1328,21 @@ function renderConsultations() {
     if (!consultations.length) { consultList.innerHTML = '<p>No consultation records saved.</p>'; return; }
     consultList.innerHTML = consultations.map(c => `
         <div class="consult-item">
-            <div><strong>${c.familyName}, ${c.firstName} ${c.middleName || ''}</strong> (${c.consultType || '-'})</div>
-            <div>${c.date || '-'} ${c.time || ''} · EmpID: ${c.employeeId || 'n/a'}</div>
-            <div>Complaint: ${c.chiefComplaint || '-'}</div>
-            <div>Plan: ${c.plan || '-'}</div>
+            <div><strong>${c.familyName}, ${c.firstName} ${c.middleName || ''}</strong></div>
+            <div style="font-size:0.85rem;color:#666;">${c.consultCategory || '-'} · ${c.consultOffice || '-'}</div>
+            <div style="font-size:0.85rem;color:#1f3a6d;margin-top:4px;">${c.date || '-'} ${c.time || ''} · EmpID: ${c.employeeId || 'n/a'}</div>
+            <div style="margin-top:8px;"><strong>Complaint:</strong> ${c.chiefComplaint || '-'}</div>
+            <div><strong>Plan:</strong> ${c.plan || '-'}</div>
         </div>`).join('');
 }
 
-const openConsultBtn           = document.getElementById('openConsultBtn');
-const consultModal             = document.getElementById('consultModal');
-const closeConsultModalBtn     = document.getElementById('closeConsultModal');
-const openRxBtn                = document.getElementById('openRxBtn');
-const rxModal                  = document.getElementById('rxModal');
-const closeRxModalBtn          = document.getElementById('closeRxModal');
-const printRxBtn               = document.getElementById('printRxBtn');
+const openConsultBtn = document.getElementById('openConsultBtn');
+const consultModal = document.getElementById('consultModal');
+const closeConsultModalBtn = document.getElementById('closeConsultModal');
+const openRxBtn = document.getElementById('openRxBtn');
+const rxModal = document.getElementById('rxModal');
+const closeRxModalBtn = document.getElementById('closeRxModal');
+const printRxBtn = document.getElementById('printRxBtn');
 openConsultBtn.onclick = () => {
     const searchInput = document.getElementById('consultEmployeeSearch');
     if (searchInput) searchInput.value = '';
@@ -1345,7 +1382,7 @@ printRxBtn.onclick = () => {
     // Get prescription data
     const employeeId = document.getElementById('rxEmployeeId').value;
     const consultDateValue = document.getElementById('rxConsultDate').value;
-    
+
     // Gather prescription details
     const prescriptionData = {
         fullName: document.getElementById('rxFullName').value.trim(),
@@ -1357,7 +1394,7 @@ printRxBtn.onclick = () => {
         note: document.getElementById('rxNote').value.trim(),
         printedAt: new Date().toISOString()
     };
-    
+
     // Collect medicines
     for (let i = 1; i <= 3; i++) {
         const name = document.getElementById(`rxMedName${i}`).value.trim();
@@ -1366,7 +1403,7 @@ printRxBtn.onclick = () => {
             prescriptionData.medicines.push({ name, details });
         }
     }
-    
+
     // Save to consultation if selected
     if (employeeId && consultDateValue) {
         const [date, time, idx] = consultDateValue.split('||');
@@ -1377,125 +1414,29 @@ printRxBtn.onclick = () => {
             }
             employee.consultations[idx].prescriptions.push(prescriptionData);
             saveEmployees();
+            showToast('Prescription saved to consultation!', 'green');
         }
     }
-    
-    // Generate and download PDF
-    generatePrescriptionPDF(prescriptionData, employeeId);
-    
-    showToast('Prescription saved and PDF downloaded!', 'green');
-    closeRxModal();
-};
 
-function generatePrescriptionPDF(prescriptionData, employeeId) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
+    // Proceed with printing
+    renderPrescriptionPreview();
+    const rxPrintArea = document.getElementById('rxPrintArea');
+    if (!rxPrintArea) return;
+    rxPrintArea.style.display = 'block';
+    rxPrintArea.classList.add('print-active');
+    const cleanupPrint = () => {
+        rxPrintArea.classList.remove('print-active');
+        rxPrintArea.style.display = 'none';
+        window.onafterprint = null;
+    };
+    window.onafterprint = cleanupPrint;
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            window.print();
+            if (typeof window.onafterprint !== 'function') cleanupPrint();
+        }, 150);
     });
-    
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    let yPosition = 15;
-    
-    // Header
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Val O. Acosta, MD', 20, yPosition);
-    yPosition += 7;
-    
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('General Practice', 20, yPosition);
-    yPosition += 5;
-    doc.text('Northern Bukidnon State College', 20, yPosition);
-    yPosition += 5;
-    doc.text('Health Services Office', 20, yPosition);
-    yPosition += 5;
-    doc.text('Kihare, Tankulan Manolo Fortich Bukidnon', 20, yPosition);
-    yPosition += 10;
-    
-    // Prescribed Date
-    doc.setFont(undefined, 'bold');
-    doc.text('Prescribed on: ' + (prescriptionData.prescribedOn || new Date().toLocaleString()), 20, yPosition);
-    yPosition += 12;
-    
-    // Patient Info
-    doc.setFont(undefined, 'bold');
-    doc.text('Patient: ', 20, yPosition);
-    doc.setFont(undefined, 'normal');
-    doc.text(prescriptionData.fullName || '___________________', 50, yPosition);
-    yPosition += 7;
-    
-    doc.setFont(undefined, 'bold');
-    doc.text('Age: ', 20, yPosition);
-    doc.setFont(undefined, 'normal');
-    doc.text(prescriptionData.age ? prescriptionData.age + ' years old' : '_______', 50, yPosition);
-    yPosition += 7;
-    
-    doc.setFont(undefined, 'bold');
-    doc.text('Gender: ', 20, yPosition);
-    doc.setFont(undefined, 'normal');
-    doc.text(prescriptionData.gender || '_______', 50, yPosition);
-    yPosition += 12;
-    
-    // Rx symbol
-    doc.setFontSize(24);
-    doc.setFont(undefined, 'bold');
-    doc.text('Rx', 20, yPosition);
-    yPosition += 12;
-    
-    // Medicines
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    
-    if (prescriptionData.medicines.length > 0) {
-        prescriptionData.medicines.forEach((med) => {
-            doc.setFont(undefined, 'bold');
-            doc.text('• ' + med.name, 20, yPosition);
-            yPosition += 5;
-            
-            if (med.details) {
-                doc.setFont(undefined, 'normal');
-                doc.setFontSize(9);
-                doc.text('   ' + med.details, 20, yPosition);
-                doc.setFontSize(10);
-                yPosition += 5;
-            }
-            yPosition += 2;
-        });
-    } else {
-        doc.text('No medicines prescribed', 20, yPosition);
-        yPosition += 7;
-    }
-    
-    yPosition += 5;
-    
-    // Note section
-    if (prescriptionData.note) {
-        doc.setFont(undefined, 'bold');
-        doc.text('Note:', 20, yPosition);
-        yPosition += 5;
-        doc.setFont(undefined, 'normal');
-        const noteLines = doc.splitTextToSize(prescriptionData.note, pageWidth - 40);
-        doc.text(noteLines, 20, yPosition);
-        yPosition += noteLines.length * 5 + 5;
-    }
-    
-    // Footer
-    yPosition = pageHeight - 20;
-    doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
-    doc.text('Printed on: ' + new Date().toLocaleString(), 20, yPosition);
-    
-    // Generate filename
-    const fileName = `Prescription_${employeeId || 'Patient'}_${new Date().toISOString().slice(0, 10)}.pdf`;
-    
-    // Download PDF
-    doc.save(fileName);
-}
-
+};
 
 function closeRxModal() {
     if (rxModal) rxModal.style.display = 'none';
@@ -1554,6 +1495,13 @@ function fillRxEmployeeFields(emp) {
     document.getElementById('rxAge').value = emp.age || '';
     document.getElementById('rxGender').value = emp.gender || '';
     document.getElementById('rxAddress').value = emp.address || '';
+    
+    // Connect Category and Office
+    const rxCategory = document.getElementById('rxCategory');
+    const rxOffice = document.getElementById('rxOffice');
+    if (rxCategory) rxCategory.value = emp.category || '';
+    if (rxOffice) rxOffice.value = emp.office || '';
+    
     updateRxConsultationDates(emp);
     renderPrescriptionPreview();
 }
@@ -1567,7 +1515,7 @@ function updateRxConsultationDates(employee) {
         consultDateSelect.disabled = true;
         return;
     }
-    const sortedConsults = consultations.slice().sort((a,b) => new Date(b.date + ' ' + (b.time || '')).getTime() - new Date(a.date + ' ' + (a.time || '')).getTime());
+    const sortedConsults = consultations.slice().sort((a, b) => new Date(b.date + ' ' + (b.time || '')).getTime() - new Date(a.date + ' ' + (a.time || '')).getTime());
     sortedConsults.forEach((c, idx) => {
         const label = `${c.date || 'No date'} ${c.time || ''}`.trim();
         const option = document.createElement('option');
@@ -1582,7 +1530,7 @@ function updateRxConsultationDates(employee) {
         const [date, time, idx] = value.split('||');
         const consult = sortedConsults[Number(idx)];
         if (consult) {
-            const prescribedOn = consult.date ? `${consult.date}T${(consult.time || '00:00')}` : new Date().toISOString().slice(0,16);
+            const prescribedOn = consult.date ? `${consult.date}T${(consult.time || '00:00')}` : new Date().toISOString().slice(0, 16);
             document.getElementById('rxPrescribedOn').value = prescribedOn;
             renderPrescriptionPreview();
         }
@@ -1595,7 +1543,7 @@ function renderPrescriptionPreview() {
     const gender = document.getElementById('rxGender').value.trim() || '___';
     const address = document.getElementById('rxAddress').value.trim() || '______________________';
     const prescribedOnValue = document.getElementById('rxPrescribedOn').value;
-    const prescribedOn = formatPrescriptionDate(prescribedOnValue || new Date().toISOString().slice(0,16));
+    const prescribedOn = formatPrescriptionDate(prescribedOnValue || new Date().toISOString().slice(0, 16));
     const clinicName = document.getElementById('rxDoctorName').value.trim() || 'Dr. Val Acosta Clinic';
     const note = document.getElementById('rxNote').value.trim();
     const meds = [];
@@ -1675,7 +1623,9 @@ if (consultForm) {
     consultForm.onsubmit = (e) => {
         e.preventDefault();
         const record = {
-            consultType: gv('consultType'), familyName: gv('consultFamilyName'),
+            consultCategory: gv('consultCategory'), 
+            consultOffice: gv('consultOffice'),
+            familyName: gv('consultFamilyName'),
             firstName: gv('consultFirstName'), middleName: gv('consultMiddleName'),
             sex: gv('consultSex'), civilStatus: gv('consultCivilStatus'),
             phone: gv('consultPhone'), age: gv('consultAge'), birthdate: gv('consultBday'),
@@ -1689,7 +1639,9 @@ if (consultForm) {
             if (!Array.isArray(employee.consultations)) employee.consultations = [];
             employee.consultations.unshift({
                 date: record.date, time: record.time, chiefComplaint: record.chiefComplaint, plan: record.plan,
-                consultType: record.consultType, bp: record.bp, hr: record.hr, rr: record.rr, temp: record.temp,
+                consultCategory: record.consultCategory, 
+                consultOffice: record.consultOffice,
+                bp: record.bp, hr: record.hr, rr: record.rr, temp: record.temp,
                 height: record.height, weight: record.weight, createdAt: new Date().toISOString()
             });
             saveEmployees();
@@ -1702,11 +1654,11 @@ if (consultForm) {
 }
 
 window.onclick = (event) => {
-    if (event.target === consultModal)                                  consultModal.style.display = 'none';
-    if (event.target === rxModal)                                       rxModal.style.display = 'none';
-    if (event.target === addModal)                                      addModal.style.display = 'none';
-    if (event.target === importModal)                                   importModal.style.display = 'none';
-    if (event.target === document.getElementById('viewModal'))          document.getElementById('viewModal').style.display = 'none';
+    if (event.target === consultModal) consultModal.style.display = 'none';
+    if (event.target === rxModal) rxModal.style.display = 'none';
+    if (event.target === addModal) addModal.style.display = 'none';
+    if (event.target === importModal) importModal.style.display = 'none';
+    if (event.target === document.getElementById('viewModal')) document.getElementById('viewModal').style.display = 'none';
     if (event.target === document.getElementById('consultDetailModal')) document.getElementById('consultDetailModal').style.display = 'none';
 };
 
@@ -1748,24 +1700,24 @@ async function processScannedForm(file, importType = 'consultation') {
     if (!file) {
         throw new Error('No file selected');
     }
-    
+
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
         throw new Error('File size too large (max 10MB)');
     }
-    
+
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
         throw new Error(`Invalid file type. Allowed: JPG, PNG, GIF, PDF. Got: ${file.type}`);
     }
-    
+
     showToast('Processing scanned form... (This may take a moment)', 'blue');
-    
+
     try {
         if (!window.Tesseract) {
             throw new Error('Tesseract OCR library not loaded. Please refresh the page.');
         }
-        
+
         const { createWorker } = Tesseract;
         let worker;
         try {
@@ -1775,12 +1727,12 @@ async function processScannedForm(file, importType = 'consultation') {
         } catch (e) {
             throw new Error('Failed to initialize OCR: ' + e.message);
         }
-        
+
         let text = '';
         try {
             const { data: result } = await worker.recognize(file);
             text = result.text || '';
-            
+
             if (!text || text.trim().length === 0) {
                 throw new Error('No text detected in image. Try a clearer, better-lit scan.');
             }
@@ -1806,12 +1758,12 @@ async function processScannedForm(file, importType = 'consultation') {
         if (!parsedData || Object.keys(parsedData).length === 0) {
             throw new Error('Could not parse consultation data from scan');
         }
-        
-        let employee = employees.find(e => 
-            e.id === parsedData.id || 
+
+        let employee = employees.find(e =>
+            e.id === parsedData.id ||
             (parsedData.name && e.name.toLowerCase().includes(parsedData.name.toLowerCase()))
         );
-        
+
         if (!employee && parsedData.id) {
             employee = {
                 id: parsedData.id,
@@ -1821,21 +1773,21 @@ async function processScannedForm(file, importType = 'consultation') {
             };
             employees.unshift(employee);
         }
-        
+
         if (!employee) {
             throw new Error('Could not match employee from scanned data. Please add employee manually.');
         }
-        
+
         const consultation = {
             date: parsedData.date || new Date().toISOString().split('T')[0],
-            time: parsedData.time || new Date().toTimeString().slice(0,5),
+            time: parsedData.time || new Date().toTimeString().slice(0, 5),
             consultType: parsedData.consultType || 'General',
             height: parsedData.height,
             weight: parsedData.weight,
             chiefComplaint: parsedData.complaint || 'From scanned form',
             plan: parsedData.plan || 'Follow-up needed',
-            bp: parsedData.bp, 
-            hr: parsedData.hr, 
+            bp: parsedData.bp,
+            hr: parsedData.hr,
             rr: parsedData.rr,
             temp: parsedData.temp,
             createdAt: new Date().toISOString(),
@@ -1843,7 +1795,7 @@ async function processScannedForm(file, importType = 'consultation') {
             scanFile: file.name,
             ocrText: text.slice(0, 200) + '...'
         };
-        
+
         if (!Array.isArray(employee.consultations)) employee.consultations = [];
         employee.consultations.unshift(consultation);
         saveEmployees();
@@ -1851,7 +1803,7 @@ async function processScannedForm(file, importType = 'consultation') {
         populateConsultEmployeeOptions();
         showToast(`✅ Consultation added to ${employee.name}!`, 'green');
         viewEmployee(employee.id);
-        
+
         return parsedData;
     } catch (error) {
         const errorMsg = error.message || 'Unknown error occurred';
@@ -2064,10 +2016,10 @@ function toggleExportConsultationDateGroup() {
 
 function exportEmployeeProfile(emp) {
     const printWindow = window.open('', '_blank');
-    const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0,2).toUpperCase();
+    const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0, 2).toUpperCase();
     const currentDate = new Date();
     const reviewDate = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
-    
+
     // STEP III: Personal/Social History
     const personalHistory = [];
     if (emp.smoking) personalHistory.push(`Smoking: ${emp.smoking}${emp.smokingPack ? ` (${emp.smokingPack})` : ''}`);
@@ -2075,11 +2027,11 @@ function exportEmployeeProfile(emp) {
     if (emp.drugs) personalHistory.push(`Drugs: ${emp.drugs}`);
     if (emp.sexActivity) personalHistory.push(`Sexually Active: ${emp.sexActivity}`);
     if (emp.sexPartners) personalHistory.push(`Sexual Partners: ${emp.sexPartners}${emp.sexPartnerGender ? ` (${emp.sexPartnerGender})` : ''}`);
-    
-    const personalHistoryHtml = personalHistory.length > 0 
+
+    const personalHistoryHtml = personalHistory.length > 0
         ? personalHistory.map(h => `<tr><td>${h}</td></tr>`).join('')
         : `<tr><td style="color:#666;">None reported</td></tr>`;
-    
+
     // STEP IV: Past Medical History
     const medicalConditions = [];
     if (emp.pmAllergy) medicalConditions.push(`Allergy (${emp.pmAllergyType || 'unspecified'})`);
@@ -2097,11 +2049,11 @@ function exportEmployeeProfile(emp) {
     if (emp.pmSkin) medicalConditions.push('Skin Disorder');
     if (emp.pmTB) medicalConditions.push('Tuberculosis');
     if (emp.pmHepatitis) medicalConditions.push('Hepatitis');
-    
-    const medConditionsHtml = medicalConditions.length > 0 
+
+    const medConditionsHtml = medicalConditions.length > 0
         ? medicalConditions.map(c => `<tr><td>${c}</td></tr>`).join('')
         : `<tr><td colspan="1" style="color:#666;">None reported</td></tr>`;
-    
+
     // STEP V: Hospital/Surgical History
     const hospitalHistory = [];
     if (emp.hospitalDiagnosis1) hospitalHistory.push(`${emp.hospitalDiagnosis1}${emp.hospitalWhen1 ? ` (${emp.hospitalWhen1})` : ''}`);
@@ -2109,14 +2061,14 @@ function exportEmployeeProfile(emp) {
     const surgeryHistory = [];
     if (emp.surgeryType1) surgeryHistory.push(`${emp.surgeryType1}${emp.surgeryWhen1 ? ` (${emp.surgeryWhen1})` : ''}`);
     if (emp.surgeryType2) surgeryHistory.push(`${emp.surgeryType2}${emp.surgeryWhen2 ? ` (${emp.surgeryWhen2})` : ''}`);
-    
-    const hospitalHtml = hospitalHistory.length > 0 
+
+    const hospitalHtml = hospitalHistory.length > 0
         ? hospitalHistory.map(h => `<tr><td>${h}</td></tr>`).join('')
         : `<tr><td style="color:#666;">None reported</td></tr>`;
     const surgeryHtml = surgeryHistory.length > 0
         ? surgeryHistory.map(s => `<tr><td>${s}</td></tr>`).join('')
         : `<tr><td style="color:#666;">None reported</td></tr>`;
-    
+
     // STEP VI: Immunizations
     const immunizations = [];
     if (emp.newbornImmunization) immunizations.push(`Newborn: ${emp.newbornImmunization}`);
@@ -2126,11 +2078,11 @@ function exportEmployeeProfile(emp) {
     if (emp.influenzaYear) immunizations.push(`Influenza Year: ${emp.influenzaYear}`);
     if (emp.pneumococcalDoses) immunizations.push(`Pneumococcal: ${emp.pneumococcalDoses} doses`);
     if (emp.otherImmunizations) immunizations.push(`Other: ${emp.otherImmunizations}`);
-    
+
     const immunizationsHtml = immunizations.length > 0
         ? immunizations.map(i => `<tr><td>${i}</td></tr>`).join('')
         : `<tr><td style="color:#666;">None reported</td></tr>`;
-    
+
     // STEP VII: Medications & OB-GYNE
     const mainMedication = emp.maintenanceMedication || '—';
     const obGynNotes = emp.obGynNotes || '—';
@@ -2393,7 +2345,7 @@ function exportEmployeeProfile(emp) {
             </div>
           </div>
     `;
-    
+
     const html = `
         <!DOCTYPE html>
         <html lang="en">
@@ -2835,9 +2787,9 @@ function exportEmployeeProfile(emp) {
 
 function exportEmployeeConsultations(emp, consultIndex) {
     const printWindow = window.open('', '_blank');
-    const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0,2).toUpperCase();
+    const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0, 2).toUpperCase();
     const currentDate = new Date();
-    
+
     let consultationsData = (emp.consultations || []);
     if (consultIndex !== undefined && consultIndex !== null && consultIndex !== '' && String(consultIndex) !== '-1') {
         const index = Number(consultIndex);
@@ -2845,7 +2797,7 @@ function exportEmployeeConsultations(emp, consultIndex) {
             consultationsData = [consultationsData[index]];
         }
     }
-    const consultationsHtml = consultationsData.length > 0 
+    const consultationsHtml = consultationsData.length > 0
         ? consultationsData.map(c => `
             <div class="panel" style="margin-bottom:1rem; page-break-inside: avoid; break-inside: avoid;">
               <div class="panel-head">
@@ -3145,60 +3097,17 @@ exportModal.addEventListener('click', (event) => {
     }
 });
 
-importModal.onclick = (e) => {
-    if (e.target === importModal) {
-        closeImportModal();
-    }
-};
 
-importBtn.onclick = openImportModal;
+
+
 exportBtn.onclick = openExportModal;
 closeExportModalBtn.onclick = closeExportModal;
 cancelExportBtn.onclick = closeExportModal;
 confirmExportBtn.onclick = exportSelectedEmployee;
 
-closeImportModalBtn.onclick = closeImportModal;
-cancelImportBtn.onclick = closeImportModal;
-confirmImportBtn.onclick = () => {
-    if (!importTypeSelect.value) {
-        alert('Please choose an import type.');
-        return;
-    }
-    fileInput.click();
-};
 
-fileInput.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Show loading indicator
-    const originalText = confirmImportBtn.innerText;
-    confirmImportBtn.disabled = true;
-    confirmImportBtn.innerText = 'Processing...';
-    
-    try {
-        const importType = importTypeSelect?.value || 'consultation';
-        await processScannedForm(file, importType);
-        fileInput.value = '';
-        closeImportModal();
-    } catch (error) {
-        const errorMsg = error?.message || 'Unknown error occurred during file import';
-        showToast(`❌ ${errorMsg}`, 'red');
-        console.error('Import error:', error);
-    } finally {
-        confirmImportBtn.disabled = false;
-        confirmImportBtn.innerText = originalText;
-        fileInput.value = '';
-    }
-};
 
-function openImportModal() {
-    if (importModal) importModal.style.display = 'flex';
-}
 
-function closeImportModal() {
-    if (importModal) importModal.style.display = 'none';
-}
 
 // Add click outside to close modals
 exportModal.onclick = (e) => {
@@ -3207,8 +3116,53 @@ exportModal.onclick = (e) => {
     }
 };
 
-importModal.onclick = (e) => {
-    if (e.target === importModal) {
-        closeImportModal();
+
+
+
+
+// --- INITIALIZATION ---
+window.addEventListener('DOMContentLoaded', () => {
+    // Migration: Connect existing employees to sample offices/categories if missing
+    let modified = false;
+    employees.forEach(emp => {
+        if (!emp.category) {
+            emp.category = ['Regular', 'Job Order', 'Contract of Service'][Math.floor(Math.random() * 3)];
+            modified = true;
+        }
+        if (!emp.office) {
+            const sampleOffices = [
+                'Office of the College President',
+                'Human Resource Management and Development Office',
+                'Legal Office',
+                'Health Services Office',
+                'Registar and Record Office',
+                'Institute for Teacher Education',
+                'Institute for Computer Studies',
+                'Institute for Business Management'
+            ];
+            emp.office = sampleOffices[Math.floor(Math.random() * sampleOffices.length)];
+            modified = true;
+        }
+    });
+    if (modified) saveEmployees();
+
+    populateOfficeFilter();
+    
+    // Explicitly reset filters to 'All' to show everyone on load
+    if (officeFilter) officeFilter.value = 'All';
+    if (categoryFilter) categoryFilter.value = 'All';
+    if (searchInput) searchInput.value = '';
+    
+    filterData();
+    updateStats();
+    if (typeof populateConsultEmployeeOptions === 'function') {
+        populateConsultEmployeeOptions();
     }
-};
+    if (typeof populateRxEmployeeOptions === 'function') {
+        populateRxEmployeeOptions();
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterData);
+    if (officeFilter) officeFilter.addEventListener('change', filterData);
+    if (categoryFilter) categoryFilter.addEventListener('change', filterData);
+});

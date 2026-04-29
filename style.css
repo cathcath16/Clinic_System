@@ -910,65 +910,6 @@ tbody tr { background: transparent !important; }
     color: #1f3a6d;
 }
 
-/* Certificates Section */
-.certificates-section {
-    padding-top: 20px;
-    border-top: 1px solid #e8ecf1;
-}
-
-.certificates-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.certificate-item-view {
-    background: #f8fafb;
-    border: 1px solid #e8ecf1;
-    border-radius: 8px;
-    padding: 14px;
-}
-
-.certificate-header-mini {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #ddd;
-}
-
-.certificate-date-mini {
-    font-size: 0.85rem;
-    color: #1f3a6d;
-    font-weight: 600;
-}
-
-.certificate-count {
-    background: #2e7d32;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.certificate-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.cert-detail {
-    font-size: 0.9rem;
-    color: #333;
-    line-height: 1.4;
-}
-
-.cert-detail strong {
-    color: #1f3a6d;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .consult-header-section {
