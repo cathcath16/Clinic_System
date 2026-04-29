@@ -1,5 +1,7 @@
 const tableBody = document.getElementById("tableBody");
 const searchInput = document.getElementById("searchInput");
+const officeFilter = document.getElementById("officeFilter");
+const categoryFilter = document.getElementById("categoryFilter");
 const occupationFilter = document.getElementById("occupationFilter");
 const addModal = document.getElementById("addModal");
 const addNewBtn = document.getElementById("addNewBtn");
@@ -212,13 +214,17 @@ function populateOccupationFilter() {
 }
 
 function filterData() {
-    const text   = searchInput.value.toLowerCase();
-    const filter = occupationFilter.value;
+    const text = searchInput.value.toLowerCase();
+    const officeFilterVal = officeFilter.value;
+    const categoryFilterVal = categoryFilter.value;
+    const occupationFilterVal = occupationFilter.value;
     filteredEmployees = sortEmployeesByName(employees.filter(emp => {
-        const matchesText = [emp.name, emp.id, emp.contact, emp.religion, emp.occupation, emp.civilStatus]
+        const matchesText = [emp.name, emp.id, emp.contact, emp.religion, emp.occupation, emp.civilStatus, emp.office, emp.category]
             .some(v => (v || '').toLowerCase().includes(text));
-        const matchesOccupation = filter === 'All' || emp.occupation === filter;
-        return matchesText && matchesOccupation;
+        const matchesOffice = officeFilterVal === 'All' || emp.office === officeFilterVal;
+        const matchesCategory = categoryFilterVal === 'All' || emp.category === categoryFilterVal;
+        const matchesOccupation = occupationFilterVal === 'All' || emp.occupation === occupationFilterVal;
+        return matchesText && matchesOffice && matchesCategory && matchesOccupation;
     }));
     currentPage = 1;
     renderTable(filteredEmployees);
@@ -2068,6 +2074,8 @@ filterData();
 updateStats();
 populateConsultEmployeeOptions();
 searchInput.onkeyup = filterData;
+officeFilter.onchange = filterData;
+categoryFilter.onchange = filterData;
 occupationFilter.onchange = filterData;
 showStep(0);
 

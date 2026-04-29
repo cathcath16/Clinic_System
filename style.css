@@ -262,6 +262,13 @@ select {
     min-width: 70px;
 }
 
+/* Filter Search Container */
+.filter-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 /* I-replace ang .add-btn block nimo ani */
 .add-btn {
     background: linear-gradient(135deg, #1f3a6d 0%, #3b82f6 100%);

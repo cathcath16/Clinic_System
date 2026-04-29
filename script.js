@@ -27,7 +27,9 @@ function generateSampleEmployees(count = 200) {
     ];
     const conditions = ['None', 'Asthma', 'Hypertension', 'Diabetes Mellitus', 'None', 'Allergy'];
     const sample = [];
-    for (let i = 1; i <= count; i++) {
+    
+    // Create 58 Regular employees
+    for (let i = 1; i <= 58; i++) {
         const last = lastNames[(i - 1) % lastNames.length];
         const first = firstNames[(i - 1) % firstNames.length];
         const middle = middleNames[(i - 1) % middleNames.length];
@@ -46,7 +48,7 @@ function generateSampleEmployees(count = 200) {
             occupation: occupations[i % occupations.length],
             civilStatus: civilStatuses[i % civilStatuses.length],
             class: classType,
-            category: ['Regular', 'Job Order', 'Contract of Service'][i % 3],
+            category: 'Regular',
             office: offices[i % offices.length],
             condition: conditions[i % conditions.length],
             address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
@@ -57,6 +59,71 @@ function generateSampleEmployees(count = 200) {
             smoking: 'No', alcohol: 'No', drugs: 'No', consultations: []
         });
     }
+    
+    // Create 110 Job Order employees
+    for (let i = 59; i <= 168; i++) {
+        const last = lastNames[(i - 1) % lastNames.length];
+        const first = firstNames[(i - 1) % firstNames.length];
+        const middle = middleNames[(i - 1) % middleNames.length];
+        const gender = genders[i % genders.length];
+        const classType = classes[i % classes.length];
+        const year = 1965 + (i % 35);
+        const month = String((i % 12) + 1).padStart(2, '0');
+        const day = String((i % 27) + 1).padStart(2, '0');
+        sample.push({
+            id: `EMP-${String(i).padStart(4, '0')}`,
+            name: `${last}, ${first} ${middle}`,
+            birthday: `${year}-${month}-${day}`,
+            contact: `+63 9${String(100000000 + i).slice(1)}`,
+            religion: religions[i % religions.length],
+            gender, age: 22 + (i % 36),
+            occupation: occupations[i % occupations.length],
+            civilStatus: civilStatuses[i % civilStatuses.length],
+            class: classType,
+            category: 'Job Order',
+            office: offices[i % offices.length],
+            condition: conditions[i % conditions.length],
+            address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
+            emergencyName: `${first} Emergency`,
+            emergencyRelationship: civilStatuses[i % civilStatuses.length],
+            emergencyAddress: `Sample St., Brgy. ${(i % 50) + 1}, City`,
+            emergencyContact: `+63 9${String(200000000 + i).slice(1)}`,
+            smoking: 'No', alcohol: 'No', drugs: 'No', consultations: []
+        });
+    }
+    
+    // Create 32 Contract of Service employees
+    for (let i = 169; i <= 200; i++) {
+        const last = lastNames[(i - 1) % lastNames.length];
+        const first = firstNames[(i - 1) % firstNames.length];
+        const middle = middleNames[(i - 1) % middleNames.length];
+        const gender = genders[i % genders.length];
+        const classType = classes[i % classes.length];
+        const year = 1965 + (i % 35);
+        const month = String((i % 12) + 1).padStart(2, '0');
+        const day = String((i % 27) + 1).padStart(2, '0');
+        sample.push({
+            id: `EMP-${String(i).padStart(4, '0')}`,
+            name: `${last}, ${first} ${middle}`,
+            birthday: `${year}-${month}-${day}`,
+            contact: `+63 9${String(100000000 + i).slice(1)}`,
+            religion: religions[i % religions.length],
+            gender, age: 22 + (i % 36),
+            occupation: occupations[i % occupations.length],
+            civilStatus: civilStatuses[i % civilStatuses.length],
+            class: classType,
+            category: 'Contract of Service',
+            office: offices[i % offices.length],
+            condition: conditions[i % conditions.length],
+            address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
+            emergencyName: `${first} Emergency`,
+            emergencyRelationship: civilStatuses[i % civilStatuses.length],
+            emergencyAddress: `Sample St., Brgy. ${(i % 50) + 1}, City`,
+            emergencyContact: `+63 9${String(200000000 + i).slice(1)}`,
+            smoking: 'No', alcohol: 'No', drugs: 'No', consultations: []
+        });
+    }
+    
     return sample;
 }
 
@@ -1664,12 +1731,13 @@ window.onclick = (event) => {
 
 document.getElementById('printProfileBtn').onclick = () => { window.print(); };
 
-populateOccupationFilter();
 filteredEmployees = employees;
 filterData();
 updateStats();
 populateConsultEmployeeOptions();
 searchInput.onkeyup = filterData;
+officeFilter.onchange = filterData;
+categoryFilter.onchange = filterData;
 occupationFilter.onchange = filterData;
 showStep(0);
 
