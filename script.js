@@ -312,17 +312,18 @@ function filterData() {
     }));
     currentPage = 1;
     renderTable(filteredEmployees);
+    updateStats();
 }
 
 function updateStats() {
-    const regularList = employees.filter(e => e.category === 'Regular');
-    const jobOrderList = employees.filter(e => e.category === 'Job Order');
-    const contractList = employees.filter(e => e.category === 'Contract of Service');
-    document.getElementById('count-total').innerText = employees.length;
+    const regularList = filteredEmployees.filter(e => e.category === 'Regular');
+    const jobOrderList = filteredEmployees.filter(e => e.category === 'Job Order');
+    const contractList = filteredEmployees.filter(e => e.category === 'Contract of Service');
+    document.getElementById('count-total').innerText = filteredEmployees.length;
     document.getElementById('count-regular').innerText = regularList.length;
     document.getElementById('count-joborder').innerText = jobOrderList.length;
     document.getElementById('count-contract').innerText = contractList.length;
-    document.getElementById('total-count').innerText = employees.length;
+    document.getElementById('total-count').innerText = filteredEmployees.length;
     document.getElementById('names-regular').innerText = regularList.slice(0, 5).map(e => e.name).join(', ') + (regularList.length > 5 ? '...' : '') || 'No records';
     document.getElementById('names-joborder').innerText = jobOrderList.slice(0, 5).map(e => e.name).join(', ') + (jobOrderList.length > 5 ? '...' : '') || 'No records';
     document.getElementById('names-contract').innerText = contractList.slice(0, 5).map(e => e.name).join(', ') + (contractList.length > 5 ? '...' : '') || 'No records';
@@ -1724,7 +1725,6 @@ window.onclick = (event) => {
     if (event.target === consultModal) consultModal.style.display = 'none';
     if (event.target === rxModal) rxModal.style.display = 'none';
     if (event.target === addModal) addModal.style.display = 'none';
-    if (event.target === importModal) importModal.style.display = 'none';
     if (event.target === document.getElementById('viewModal')) document.getElementById('viewModal').style.display = 'none';
     if (event.target === document.getElementById('consultDetailModal')) document.getElementById('consultDetailModal').style.display = 'none';
 };
@@ -1741,251 +1741,11 @@ categoryFilter.onchange = filterData;
 occupationFilter.onchange = filterData;
 showStep(0);
 
-// Add these variables at top
-const importBtn = document.getElementById('importBtn');
-const exportBtn = document.getElementById('exportBtn');
-const fileInput = document.getElementById('fileInput');
-const importModal = document.getElementById('importModal');
-const importTypeSelect = document.getElementById('importTypeSelect');
-const closeImportModalBtn = document.getElementById('closeImportModal');
-const cancelImportBtn = document.getElementById('cancelImportBtn');
-const confirmImportBtn = document.getElementById('confirmImportBtn');
-const exportModal = document.getElementById('exportModal');
-const closeExportModalBtn = document.getElementById('closeExportModal');
-const cancelExportBtn = document.getElementById('cancelExportBtn');
-const confirmExportBtn = document.getElementById('confirmExportBtn');
-const exportEmployeeSearch = document.getElementById('exportEmployeeSearch');
-const exportEmployeeList = document.getElementById('exportEmployeeList');
-const exportEmployeeResults = document.getElementById('exportEmployeeResults');
-const exportEmployeeIdInput = document.getElementById('exportEmployeeId');
-const exportTypeSelect = document.getElementById('exportTypeSelect');
-const exportConsultDateSelect = document.getElementById('exportConsultDateSelect');
-const exportConsultationDateGroup = document.getElementById('exportConsultationDateGroup');
-
-// OCR + Import Function
-async function processScannedForm(file, importType = 'consultation') {
-    // Validate file
-    if (!file) {
-        throw new Error('No file selected');
-    }
-
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-        throw new Error('File size too large (max 10MB)');
-    }
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
-        throw new Error(`Invalid file type. Allowed: JPG, PNG, GIF, PDF. Got: ${file.type}`);
-    }
-
-    showToast('Processing scanned form... (This may take a moment)', 'blue');
-
-    try {
-        if (!window.Tesseract) {
-            throw new Error('Tesseract OCR library not loaded. Please refresh the page.');
-        }
-
-        const { createWorker } = Tesseract;
-        let worker;
-        try {
-            worker = await createWorker('eng', 1, {
-                workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/worker.min.js'
-            });
-        } catch (e) {
-            throw new Error('Failed to initialize OCR: ' + e.message);
-        }
-
-        let text = '';
-        try {
-            const { data: result } = await worker.recognize(file);
-            text = result.text || '';
-
-            if (!text || text.trim().length === 0) {
-                throw new Error('No text detected in image. Try a clearer, better-lit scan.');
-            }
-        } catch (e) {
-            throw new Error('OCR processing failed: ' + e.message);
-        } finally {
-            try {
-                await worker.terminate();
-            } catch (e) {
-                console.warn('Worker termination warning:', e);
-            }
-        }
-
-        if (importType === 'profile') {
-            const parsedData = extractProfileData(text);
-            if (!parsedData || Object.keys(parsedData).length === 0) {
-                throw new Error('Could not parse profile data from scan');
-            }
-            return processScannedProfile(parsedData, file);
-        }
-
-        const parsedData = extractFormData(text);
-        if (!parsedData || Object.keys(parsedData).length === 0) {
-            throw new Error('Could not parse consultation data from scan');
-        }
-
-        let employee = employees.find(e =>
-            e.id === parsedData.id ||
-            (parsedData.name && e.name.toLowerCase().includes(parsedData.name.toLowerCase()))
-        );
-
-        if (!employee && parsedData.id) {
-            employee = {
-                id: parsedData.id,
-                name: parsedData.name || 'Scanned Employee',
-                class: 'Class A',
-                consultations: []
-            };
-            employees.unshift(employee);
-        }
-
-        if (!employee) {
-            throw new Error('Could not match employee from scanned data. Please add employee manually.');
-        }
-
-        const consultation = {
-            date: parsedData.date || new Date().toISOString().split('T')[0],
-            time: parsedData.time || new Date().toTimeString().slice(0, 5),
-            consultType: parsedData.consultType || 'General',
-            height: parsedData.height,
-            weight: parsedData.weight,
-            chiefComplaint: parsedData.complaint || 'From scanned form',
-            plan: parsedData.plan || 'Follow-up needed',
-            bp: parsedData.bp,
-            hr: parsedData.hr,
-            rr: parsedData.rr,
-            temp: parsedData.temp,
-            createdAt: new Date().toISOString(),
-            source: 'Scanned Form',
-            scanFile: file.name,
-            ocrText: text.slice(0, 200) + '...'
-        };
-
-        if (!Array.isArray(employee.consultations)) employee.consultations = [];
-        employee.consultations.unshift(consultation);
-        saveEmployees();
-        updateStats();
-        populateConsultEmployeeOptions();
-        showToast(`✅ Consultation added to ${employee.name}!`, 'green');
-        viewEmployee(employee.id);
-
-        return parsedData;
-    } catch (error) {
-        const errorMsg = error.message || 'Unknown error occurred';
-        throw new Error(errorMsg);
-    }
-}
-
-function processScannedProfile(parsedData, file) {
-    if (!parsedData.id) {
-        parsedData.id = getNextEmployeeId();
-    }
-
-    let employee = employees.find(e => e.id === parsedData.id);
-    const isNew = !employee;
-
-    if (employee) {
-        Object.assign(employee, parsedData, { consultations: employee.consultations || [] });
-        showToast(`✅ Profile updated for ${employee.name}!`, 'green');
-    } else {
-        employee = Object.assign({ consultations: [] }, parsedData);
-        employees.unshift(employee);
-        normalizeEmployeeIds();
-        showToast(`✅ New employee profile added: ${employee.name}!`, 'green');
-    }
-
-    saveEmployees();
-    renderTable(employees);
-    updateStats();
-    populateConsultEmployeeOptions();
-    if (!isNew) viewEmployee(employee.id);
-    return parsedData;
-}
-
-function extractProfileData(text) {
-    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-    return {
-        id: extractEmpID(lines),
-        name: extractName(lines) || 'Scanned Employee',
-        birthday: extractField(lines, ['BIRTHDATE', 'DATE OF BIRTH', 'DOB']) || '',
-        age: extractAge(lines) || '',
-        occupation: extractField(lines, ['OCCUPATION', 'POSITION', 'JOB']) || '',
-        religion: extractField(lines, ['RELIGION']) || '',
-        civilStatus: extractField(lines, ['CIVIL STATUS', 'STATUS']) || '',
-        gender: extractField(lines, ['SEX', 'GENDER']) || '',
-        contact: extractField(lines, ['CONTACT', 'PHONE', 'MOBILE', 'CELLPHONE']) || '',
-        address: extractField(lines, ['ADDRESS']) || '',
-        condition: extractField(lines, ['MEDICAL CONDITION', 'CONDITION', 'DIAGNOSIS']) || '',
-        class: extractField(lines, ['CLASS']) || 'Class A'
-    };
-}
-
-function extractAge(lines) {
-    const ageLine = lines.find(l => l.toUpperCase().includes('AGE'));
-    if (!ageLine) return '';
-    const match = ageLine.match(/AGE\s*[:\-]?\s*(\d{1,3})/i);
-    return match?.[1] || '';
-}
-
-function extractField(lines, labels) {
-    const upperLabels = labels.map(l => l.toUpperCase());
-    for (const line of lines) {
-        const up = line.toUpperCase();
-        for (const label of upperLabels) {
-            if (up.includes(label)) {
-                const parts = line.split(/[:\-]/);
-                if (parts.length > 1) {
-                    return parts.slice(1).join('-').trim();
-                }
-                return line.replace(new RegExp(label, 'i'), '').trim();
-            }
-        }
-    }
-    return '';
-}
-
-// AI Form Parser (regex + heuristics)
-function extractFormData(text) {
-    const lines = text.toUpperCase().split('\n');
-    return {
-        id: extractEmpID(lines),
-        name: extractName(lines),
-        date: extractDate(lines),
-        complaint: extractComplaint(lines),
-        bp: extractVitals(lines, 'BP'),
-        hr: extractVitals(lines, 'HR'),
-        temp: extractVitals(lines, 'TEMP')
-    };
-}
-
-function extractEmpID(lines) {
-    const idMatch = lines.find(l => l.match(/EMP-\d{4}/));
-    return idMatch?.match(/EMP-\d{4}/)?.[0];
-}
-
-function extractName(lines) {
-    const nameMatch = lines.find(l => l.match(/[A-Z]{2,}\s*,\s*[A-Z]{2,}/));
-    return nameMatch;
-}
-
-function extractDate(lines) {
-    const dateMatch = lines.find(l => l.match(/\d{1,2}\/\d{1,2}\/\d{2,4}/));
-    return dateMatch;
-}
-
-function extractComplaint(lines) {
-    const complaintLines = lines.slice(5, 15).join(' ').match(/[A-Z][a-z\s\.,]+(?=\n\n|\n[A-Z]{3,})/);
-    return complaintLines?.[0];
-}
-
-function extractVitals(lines, type) {
-    const vitals = lines.find(l => l.includes(type));
-    return vitals?.match(/\d+\.?\d*/)?.[0];
-}
-
+// Export Variables
+// Export variables - to be initialized in DOMContentLoaded
+let exportBtn, exportModal, closeExportModalBtn, cancelExportBtn, confirmExportBtn;
+let exportEmployeeSearch, exportEmployeeList, exportEmployeeResults, exportEmployeeIdInput;
+let exportTypeSelect, exportConsultDateSelect, exportConsultationDateGroup;
 // Export Functions
 function getExportEmployeeIdFromInput() {
     const value = (exportEmployeeSearch.value || '').trim();
@@ -2084,6 +1844,10 @@ function toggleExportConsultationDateGroup() {
 
 function exportEmployeeProfile(emp) {
     const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        showToast('❌ Popup blocked! Please allow popups for this site.', 'red');
+        return;
+    }
     const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0, 2).toUpperCase();
     const currentDate = new Date();
     const reviewDate = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), currentDate.getDate());
@@ -2848,13 +2612,27 @@ function exportEmployeeProfile(emp) {
         </div>
         </body>
         </html>`;
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
+    try {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => {
+            if (printWindow && !printWindow.closed) {
+                printWindow.print();
+            }
+        }, 250);
+    } catch (err) {
+        console.error('Export error:', err);
+        showToast('❌ Error exporting profile. Please try again.', 'red');
+        printWindow.close();
+    }
 }
 
 function exportEmployeeConsultations(emp, consultIndex) {
     const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        showToast('❌ Popup blocked! Please allow popups for this site.', 'red');
+        return;
+    }
     const initials = (emp.name || ' ').split(',').map(s => s.trim()[0]).join('').slice(0, 2).toUpperCase();
     const currentDate = new Date();
 
@@ -3099,9 +2877,19 @@ function exportEmployeeConsultations(emp, consultIndex) {
         </div>
         </body>
         </html>`;
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
+    try {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => {
+            if (printWindow && !printWindow.closed) {
+                printWindow.print();
+            }
+        }, 250);
+    } catch (err) {
+        console.error('Export error:', err);
+        showToast('❌ Error exporting consultation. Please try again.', 'red');
+        printWindow.close();
+    }
 }
 
 function exportSelectedEmployee() {
@@ -3141,48 +2929,7 @@ function closeExportModal() {
     exportModal.style.display = 'none';
 }
 
-exportTypeSelect.onchange = () => {
-    toggleExportConsultationDateGroup();
-};
-
-exportEmployeeSearch.addEventListener('input', updateExportEmployeeSearch);
-exportEmployeeSearch.addEventListener('blur', () => {
-    const employeeId = getExportEmployeeIdFromInput();
-    exportEmployeeIdInput.value = employeeId;
-    updateExportConsultationDates();
-});
-
-exportEmployeeResults.addEventListener('click', (event) => {
-    const item = event.target.closest('.search-result-item');
-    if (!item || !item.dataset.id) return;
-    selectExportEmployeeResult(item.dataset.id, item.textContent.trim());
-});
-
-// Hide results when clicking outside the result list inside the export modal
-exportModal.addEventListener('click', (event) => {
-    if (event.target === exportModal) {
-        closeExportModal();
-    }
-});
-
-
-
-
-exportBtn.onclick = openExportModal;
-closeExportModalBtn.onclick = closeExportModal;
-cancelExportBtn.onclick = closeExportModal;
-confirmExportBtn.onclick = exportSelectedEmployee;
-
-
-
-
-
-// Add click outside to close modals
-exportModal.onclick = (e) => {
-    if (e.target === exportModal) {
-        closeExportModal();
-    }
-};
+// Export event handlers will be set up in DOMContentLoaded
 
 
 
@@ -3190,6 +2937,20 @@ exportModal.onclick = (e) => {
 
 // --- INITIALIZATION ---
 window.addEventListener('DOMContentLoaded', () => {
+    // Initialize export variables now that DOM is ready
+    exportBtn = document.getElementById('exportBtn');
+    exportModal = document.getElementById('exportModal');
+    closeExportModalBtn = document.getElementById('closeExportModal');
+    cancelExportBtn = document.getElementById('cancelExportBtn');
+    confirmExportBtn = document.getElementById('confirmExportBtn');
+    exportEmployeeSearch = document.getElementById('exportEmployeeSearch');
+    exportEmployeeList = document.getElementById('exportEmployeeList');
+    exportEmployeeResults = document.getElementById('exportEmployeeResults');
+    exportEmployeeIdInput = document.getElementById('exportEmployeeId');
+    exportTypeSelect = document.getElementById('exportTypeSelect');
+    exportConsultDateSelect = document.getElementById('exportConsultDateSelect');
+    exportConsultationDateGroup = document.getElementById('exportConsultationDateGroup');
+
     // Migration: Connect existing employees to sample offices/categories if missing
     let modified = false;
     employees.forEach(emp => {
@@ -3233,4 +2994,41 @@ window.addEventListener('DOMContentLoaded', () => {
     if (searchInput) searchInput.addEventListener('input', filterData);
     if (officeFilter) officeFilter.addEventListener('change', filterData);
     if (categoryFilter) categoryFilter.addEventListener('change', filterData);
+
+    // Setup export event handlers
+    if (exportBtn) exportBtn.onclick = openExportModal;
+    if (closeExportModalBtn) closeExportModalBtn.onclick = closeExportModal;
+    if (cancelExportBtn) cancelExportBtn.onclick = closeExportModal;
+    if (confirmExportBtn) confirmExportBtn.onclick = exportSelectedEmployee;
+
+    if (exportTypeSelect) {
+        exportTypeSelect.onchange = () => {
+            toggleExportConsultationDateGroup();
+        };
+    }
+
+    if (exportEmployeeSearch) {
+        exportEmployeeSearch.addEventListener('input', updateExportEmployeeSearch);
+        exportEmployeeSearch.addEventListener('blur', () => {
+            const employeeId = getExportEmployeeIdFromInput();
+            exportEmployeeIdInput.value = employeeId;
+            updateExportConsultationDates();
+        });
+    }
+
+    if (exportEmployeeResults) {
+        exportEmployeeResults.addEventListener('click', (event) => {
+            const item = event.target.closest('.search-result-item');
+            if (!item || !item.dataset.id) return;
+            selectExportEmployeeResult(item.dataset.id, item.textContent.trim());
+        });
+    }
+
+    if (exportModal) {
+        exportModal.addEventListener('click', (event) => {
+            if (event.target === exportModal) {
+                closeExportModal();
+            }
+        });
+    }
 });
