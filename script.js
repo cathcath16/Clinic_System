@@ -6,144 +6,220 @@ const addModal = document.getElementById("addModal");
 const addNewBtn = document.getElementById("addNewBtn");
 const addForm = document.getElementById("addForm");
 
-function generateSampleEmployees(count = 200) {
-    const lastNames = ['Aguirre', 'Bautista', 'Cruz', 'Dela Cruz', 'Enriquez', 'Flores', 'Garcia', 'Herrera', 'Ibarra', 'Jimenez', 'Lopez', 'Martinez', 'Nunez', 'Ortega', 'Perez', 'Quinto', 'Reyes', 'Santos', 'Torres', 'Urbano', 'Velasco', 'Wang', 'Xavier', 'Yap', 'Zamora'];
-    const firstNames = ['Aaron', 'Bea', 'Carlos', 'Diana', 'Ethan', 'Faith', 'Gabriel', 'Hannah', 'Ian', 'Jade', 'Kevin', 'Liam', 'Mia', 'Noah', 'Olivia', 'Paul', 'Quinn', 'Rafael', 'Sara', 'Tina', 'Victor', 'Wendy', 'Xena', 'Yvonne', 'Zane'];
-    const middleNames = ['A.', 'B.', 'C.', 'D.', 'E.', 'F.', 'G.', 'H.', 'I.', 'J.', 'K.', 'L.', 'M.', 'N.', 'O.', 'P.', 'Q.', 'R.', 'S.', 'T.'];
-    const occupations = ['Teacher', 'Clerk', 'Security Guard', 'Nurse', 'Janitor', 'Cashier', 'Counselor', 'Librarian', 'Coach', 'Secretary'];
-    const religions = ['Catholic', 'Christian', 'Iglesia', 'Islam', 'None'];
-    const civilStatuses = ['Single', 'Married', 'Separated', 'Widow/Widower'];
-    const classes = ['Class A', 'Class B', 'Class C'];
-    const genders = ['Male', 'Female'];
-    const offices = [
-        'Office of the College President',
-        'Human Resource Management and Development Office',
-        'Legal Office',
-        'Health Services Office',
-        'Registar and Record Office',
-        'Institute for Teacher Education',
-        'Institute for Computer Studies',
-        'Institute for Business Management'
-    ];
-    const conditions = ['None', 'Asthma', 'Hypertension', 'Diabetes Mellitus', 'None', 'Allergy'];
-    const sample = [];
-    
-    // Create 58 Regular employees
-    for (let i = 1; i <= 58; i++) {
-        const last = lastNames[(i - 1) % lastNames.length];
-        const first = firstNames[(i - 1) % firstNames.length];
-        const middle = middleNames[(i - 1) % middleNames.length];
-        const gender = genders[i % genders.length];
-        const classType = classes[i % classes.length];
-        const year = 1965 + (i % 35);
-        const month = String((i % 12) + 1).padStart(2, '0');
-        const day = String((i % 27) + 1).padStart(2, '0');
-        sample.push({
-            id: `EMP-${String(i).padStart(4, '0')}`,
-            name: `${last}, ${first} ${middle}`,
-            birthday: `${year}-${month}-${day}`,
-            contact: `+63 9${String(100000000 + i).slice(1)}`,
-            religion: religions[i % religions.length],
-            gender, age: 22 + (i % 36),
-            occupation: occupations[i % occupations.length],
-            civilStatus: civilStatuses[i % civilStatuses.length],
-            class: classType,
-            category: 'Regular',
-            office: offices[i % offices.length],
-            condition: conditions[i % conditions.length],
-            address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
-            emergencyName: `${first} Emergency`,
-            emergencyRelationship: civilStatuses[i % civilStatuses.length],
-            emergencyAddress: `Sample St., Brgy. ${(i % 50) + 1}, City`,
-            emergencyContact: `+63 9${String(200000000 + i).slice(1)}`,
-            smoking: 'No', alcohol: 'No', drugs: 'No', consultations: []
-        });
+// IndexedDB setup
+const dbPromise = idb.openDB('clinicDB', 2, {
+  upgrade(db) {
+    if (!db.objectStoreNames.contains('employees')) {
+      db.createObjectStore('employees', { keyPath: 'id' });
     }
-    
-    // Create 110 Job Order employees
-    for (let i = 59; i <= 168; i++) {
-        const last = lastNames[(i - 1) % lastNames.length];
-        const first = firstNames[(i - 1) % firstNames.length];
-        const middle = middleNames[(i - 1) % middleNames.length];
-        const gender = genders[i % genders.length];
-        const classType = classes[i % classes.length];
-        const year = 1965 + (i % 35);
-        const month = String((i % 12) + 1).padStart(2, '0');
-        const day = String((i % 27) + 1).padStart(2, '0');
-        sample.push({
-            id: `EMP-${String(i).padStart(4, '0')}`,
-            name: `${last}, ${first} ${middle}`,
-            birthday: `${year}-${month}-${day}`,
-            contact: `+63 9${String(100000000 + i).slice(1)}`,
-            religion: religions[i % religions.length],
-            gender, age: 22 + (i % 36),
-            occupation: occupations[i % occupations.length],
-            civilStatus: civilStatuses[i % civilStatuses.length],
-            class: classType,
-            category: 'Job Order',
-            office: offices[i % offices.length],
-            condition: conditions[i % conditions.length],
-            address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
-            emergencyName: `${first} Emergency`,
-            emergencyRelationship: civilStatuses[i % civilStatuses.length],
-            emergencyAddress: `Sample St., Brgy. ${(i % 50) + 1}, City`,
-            emergencyContact: `+63 9${String(200000000 + i).slice(1)}`,
-            smoking: 'No', alcohol: 'No', drugs: 'No', consultations: []
-        });
+    if (!db.objectStoreNames.contains('consultations')) {
+      db.createObjectStore('consultations', { keyPath: 'key' });
     }
-    
-    // Create 32 Contract of Service employees
-    for (let i = 169; i <= 200; i++) {
-        const last = lastNames[(i - 1) % lastNames.length];
-        const first = firstNames[(i - 1) % firstNames.length];
-        const middle = middleNames[(i - 1) % middleNames.length];
-        const gender = genders[i % genders.length];
-        const classType = classes[i % classes.length];
-        const year = 1965 + (i % 35);
-        const month = String((i % 12) + 1).padStart(2, '0');
-        const day = String((i % 27) + 1).padStart(2, '0');
-        sample.push({
-            id: `EMP-${String(i).padStart(4, '0')}`,
-            name: `${last}, ${first} ${middle}`,
-            birthday: `${year}-${month}-${day}`,
-            contact: `+63 9${String(100000000 + i).slice(1)}`,
-            religion: religions[i % religions.length],
-            gender, age: 22 + (i % 36),
-            occupation: occupations[i % occupations.length],
-            civilStatus: civilStatuses[i % civilStatuses.length],
-            class: classType,
-            category: 'Contract of Service',
-            office: offices[i % offices.length],
-            condition: conditions[i % conditions.length],
-            address: `Sample St., Brgy. ${((i % 50) + 1)}, City`,
-            emergencyName: `${first} Emergency`,
-            emergencyRelationship: civilStatuses[i % civilStatuses.length],
-            emergencyAddress: `Sample St., Brgy. ${(i % 50) + 1}, City`,
-            emergencyContact: `+63 9${String(200000000 + i).slice(1)}`,
-            smoking: 'No', alcohol: 'No', drugs: 'No', consultations: []
-        });
+    if (!db.objectStoreNames.contains('appointments')) {
+      const appointmentStore = db.createObjectStore('appointments', { keyPath: 'id', autoIncrement: true });
+      appointmentStore.createIndex('employeeId', 'employeeId');
+      appointmentStore.createIndex('date', 'date');
     }
-    
-    return sample;
-}
+    if (!db.objectStoreNames.contains('medications')) {
+      const medicationStore = db.createObjectStore('medications', { keyPath: 'id', autoIncrement: true });
+      medicationStore.createIndex('employeeId', 'employeeId');
+    }
+    if (!db.objectStoreNames.contains('auditLog')) {
+      const auditStore = db.createObjectStore('auditLog', { keyPath: 'id', autoIncrement: true });
+      auditStore.createIndex('timestamp', 'timestamp');
+      auditStore.createIndex('action', 'action');
+    }
+  }
+});
 
-function loadEmployees() {
-    try {
-        const ds = localStorage.getItem('employees');
-        if (ds) { const p = JSON.parse(ds); if (Array.isArray(p) && p.length) return p; }
-    } catch (err) { console.warn('Failed to load employees', err); }
-    return generateSampleEmployees(200);
-}
-function saveEmployees() { localStorage.setItem('employees', JSON.stringify(employees)); }
-function loadConsultations() {
-    try { const ds = localStorage.getItem('consultations'); if (ds) return JSON.parse(ds); }
-    catch (err) { console.warn('Failed to load consultations', err); }
+function generateSampleEmployees(count = 200) {
+    // Sample employee generation is disabled. Use final employee list instead.
     return [];
 }
-function saveConsultations() { localStorage.setItem('consultations', JSON.stringify(consultations)); }
 
-let employees = loadEmployees();
-let consultations = loadConsultations();
+function isValidEmployee(emp) {
+    if (!emp || typeof emp !== 'object') return false;
+    const id = String(emp.id || '').trim();
+    const name = String(emp.name || '').trim();
+    const age = Number(emp.age);
+    return id !== '' && id !== '0' && name !== '' && name !== '0' && !Number.isNaN(age) && age !== 0;
+}
+
+async function loadEmployees() {
+    try {
+        const db = await dbPromise;
+        let tx = db.transaction('employees', 'readonly');
+        let store = tx.objectStore('employees');
+        const all = await store.getAll();
+        if (all.length) {
+            return all.filter(isValidEmployee);
+        }
+
+        const localData = localStorage.getItem('employees');
+        if (localData) {
+            try {
+                const parsed = JSON.parse(localData);
+                if (Array.isArray(parsed)) {
+                    const filtered = parsed.filter(isValidEmployee);
+                    if (filtered.length) {
+                        tx = db.transaction('employees', 'readwrite');
+                        store = tx.objectStore('employees');
+                        await store.clear();
+                        for (const emp of filtered) {
+                            await store.put(emp);
+                        }
+                        await tx.done;
+                        return filtered;
+                    }
+                }
+            } catch (err) {
+                console.warn('Failed to migrate employees from localStorage', err);
+            }
+        }
+
+        return [];
+    } catch (err) {
+        console.warn('Failed to load employees from IndexedDB', err);
+        return [];
+    }
+}
+
+async function saveEmployees() {
+    try {
+        const db = await dbPromise;
+        const tx = db.transaction('employees', 'readwrite');
+        const store = tx.objectStore('employees');
+        await store.clear();
+        for (const emp of employees) {
+            await store.put(emp);
+        }
+        await tx.done;
+    } catch (err) {
+        console.warn('Failed to save employees to IndexedDB', err);
+    }
+}
+
+async function loadConsultations() {
+    try {
+        const db = await dbPromise;
+        const tx = db.transaction('consultations', 'readonly');
+        const store = tx.objectStore('consultations');
+        const item = await store.get('consultations');
+        if (item && Array.isArray(item.data)) {
+            return item.data;
+        }
+
+        const localData = localStorage.getItem('consultations');
+        if (localData) {
+            try {
+                const parsed = JSON.parse(localData);
+                if (Array.isArray(parsed)) {
+                    const writeTx = db.transaction('consultations', 'readwrite');
+                    const writeStore = writeTx.objectStore('consultations');
+                    await writeStore.put({ key: 'consultations', data: parsed });
+                    await writeTx.done;
+                    return parsed;
+                }
+            } catch (err) {
+                console.warn('Failed to migrate consultations from localStorage', err);
+            }
+        }
+
+        return [];
+    } catch (err) {
+        console.warn('Failed to load consultations from IndexedDB', err);
+        return [];
+    }
+}
+
+async function saveConsultations() {
+    try {
+        const db = await dbPromise;
+        const tx = db.transaction('consultations', 'readwrite');
+        const store = tx.objectStore('consultations');
+        await store.put({ key: 'consultations', data: consultations });
+        await tx.done;
+    } catch (err) {
+        console.warn('Failed to save consultations to IndexedDB', err);
+    }
+}
+
+async function loadAppointments() {
+    try {
+        const db = await dbPromise;
+        if (!db.objectStoreNames.contains('appointments')) {
+            return [];
+        }
+        const tx = db.transaction('appointments', 'readonly');
+        const store = tx.objectStore('appointments');
+        return await store.getAll();
+    } catch (err) {
+        console.warn('Failed to load appointments from IndexedDB', err);
+        return [];
+    }
+}
+
+async function saveAppointments() {
+    try {
+        const db = await dbPromise;
+        if (!db.objectStoreNames.contains('appointments')) return;
+        const tx = db.transaction('appointments', 'readwrite');
+        const store = tx.objectStore('appointments');
+        const existing = await store.getAll();
+        for (const item of existing) {
+            await store.delete(item.id);
+        }
+        for (const appointment of appointments) {
+            await store.put(appointment);
+        }
+        await tx.done;
+    } catch (err) {
+        console.warn('Failed to save appointments to IndexedDB', err);
+    }
+}
+
+async function loadMedications() {
+    try {
+        const db = await dbPromise;
+        if (!db.objectStoreNames.contains('medications')) {
+            return [];
+        }
+        const tx = db.transaction('medications', 'readonly');
+        const store = tx.objectStore('medications');
+        return await store.getAll();
+    } catch (err) {
+        console.warn('Failed to load medications from IndexedDB', err);
+        return [];
+    }
+}
+
+async function saveMedications() {
+    try {
+        const db = await dbPromise;
+        if (!db.objectStoreNames.contains('medications')) return;
+        const tx = db.transaction('medications', 'readwrite');
+        const store = tx.objectStore('medications');
+        const existing = await store.getAll();
+        for (const item of existing) {
+            await store.delete(item.id);
+        }
+        for (const medication of medications) {
+            await store.put(medication);
+        }
+        await tx.done;
+    } catch (err) {
+        console.warn('Failed to save medications to IndexedDB', err);
+    }
+}
+
+function dispatchDataUpdated() {
+    window.dispatchEvent(new Event('dataUpdated'));
+}
+
+let employees = [];
+let consultations = [];
+let appointments = [];
+let medications = [];
 let filteredEmployees = [];
 let currentPage = 1;
 const pageSize = 10;
@@ -324,9 +400,21 @@ function updateStats() {
     document.getElementById('count-joborder').innerText = jobOrderList.length;
     document.getElementById('count-contract').innerText = contractList.length;
     document.getElementById('total-count').innerText = filteredEmployees.length;
-    document.getElementById('names-regular').innerText = regularList.slice(0, 5).map(e => e.name).join(', ') + (regularList.length > 5 ? '...' : '') || 'No records';
-    document.getElementById('names-joborder').innerText = jobOrderList.slice(0, 5).map(e => e.name).join(', ') + (jobOrderList.length > 5 ? '...' : '') || 'No records';
-    document.getElementById('names-contract').innerText = contractList.slice(0, 5).map(e => e.name).join(', ') + (contractList.length > 5 ? '...' : '') || 'No records';
+    
+    // Set names display - show "(none)" if empty, otherwise show employee names
+    const regularNames = regularList.length > 0 
+        ? regularList.slice(0, 5).map(e => e.name).join(', ') + (regularList.length > 5 ? '...' : '')
+        : '(none)';
+    const jobOrderNames = jobOrderList.length > 0 
+        ? jobOrderList.slice(0, 5).map(e => e.name).join(', ') + (jobOrderList.length > 5 ? '...' : '')
+        : '(none)';
+    const contractNames = contractList.length > 0 
+        ? contractList.slice(0, 5).map(e => e.name).join(', ') + (contractList.length > 5 ? '...' : '')
+        : '(none)';
+    
+    document.getElementById('names-regular').innerText = regularNames;
+    document.getElementById('names-joborder').innerText = jobOrderNames;
+    document.getElementById('names-contract').innerText = contractNames;
 }
 
 let lastDeleted = null;
@@ -341,23 +429,32 @@ function hideUndoBar() {
     lastDeleted = null;
     if (undoTimeoutId) { clearTimeout(undoTimeoutId); undoTimeoutId = null; }
 }
-document.getElementById('undoBtn').onclick = () => {
+document.getElementById('undoBtn').onclick = async () => {
     if (!lastDeleted) return;
     employees.splice(lastDeleted.index, 0, lastDeleted.record);
     normalizeEmployeeIds();
-    saveEmployees(); renderTable(employees); updateStats(); populateConsultEmployeeOptions(); hideUndoBar();
+    await saveEmployees(); filterData(); updateStats(); populateConsultEmployeeOptions(); hideUndoBar();
 };
 
-function deleteEmployee(id) {
+async function deleteEmployee(id) {
     if (!confirm('Delete this employee record?')) return;
     const index = employees.findIndex(e => e.id === id);
     if (index === -1) return;
-    lastDeleted = { record: employees[index], index };
+    
+    const emp = employees[index];
+    lastDeleted = { record: emp, index };
     employees.splice(index, 1);
     normalizeEmployeeIds();
-    saveEmployees();
-    saveConsultations();
-    renderTable(employees);
+    
+    // Log audit trail
+    if (typeof AuditLog !== 'undefined') {
+        await AuditLog.log('EMPLOYEE_DELETE', { employeeId: id, employeeName: emp.name });
+    }
+    
+    await saveEmployees();
+    await saveConsultations();
+    dispatchDataUpdated();
+    filterData();
     updateStats();
     populateConsultEmployeeOptions();
     showUndoBar();
@@ -627,32 +724,76 @@ function collectFormValues(existingEmp) {
     };
 }
 
-addForm.onsubmit = (e) => {
+addForm.onsubmit = async (e) => {
     e.preventDefault();
-    const idVal = gv('newId').trim(), nameVal = gv('newName').trim(), ageVal = gv('newAge').trim();
-    if (!idVal || !nameVal || !ageVal) {
-        alert('Please fill in the required fields: Employee ID, Full Name, and Age.');
-        currentStep = 0; showStep(0); return;
-    }
-    if (!isEditMode) {
-        const dup = employees.find(e => e.id === idVal);
-        if (dup) {
-            alert(`Employee ID "${idVal}" already exists.`);
-            currentStep = 0; showStep(0); document.getElementById('newId').focus(); return;
+
+    // 1. Kuhaon ang data gikan sa form
+    const employeeData = {
+        id: document.getElementById("empId").value,
+        name: document.getElementById("empName").value,
+        office: document.getElementById("empOffice").value,
+        category: document.getElementById("empCategory").value,
+        gender: document.getElementById("empGender").value,
+        age: document.getElementById("empAge").value,
+        consultations: []
+    };
+
+    try {
+        // 2. Ipadala ang data sa PHP file (MySQL)
+        const response = await fetch('add_employee.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(employeeData)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+            alert("Success: Employee added to MySQL!");
+            
+            // (Optional) I-save gihapon sa IndexedDB para sa offline features
+            await dbPromise.then(db => db.put('employees', employeeData));
+            
+            addModal.style.display = "none";
+            addForm.reset();
+            location.reload(); // I-refresh ang page para makita ang bag-ong data
+        } else {
+            alert("Error: " + result.message);
         }
+    } catch (error) {
+        console.error("Fetch error:", error);
+        alert("Failed to connect to the server.");
     }
+
+
     const existingEmp = isEditMode ? employees.find(e => e.id === editId) : null;
     const newEmp = collectFormValues(existingEmp);
+    
     if (isEditMode && editId) {
         const index = employees.findIndex(e => e.id === editId);
         if (index !== -1) employees[index] = newEmp; else employees.unshift(newEmp);
         showToast('Health profile updated successfully!', 'green');
+        
+        // Log audit trail
+        if (typeof AuditLog !== 'undefined') {
+            await AuditLog.log('EMPLOYEE_UPDATE', { employeeId: editId, employeeName: newEmp.name });
+        }
     } else {
         employees.unshift(newEmp);
         normalizeEmployeeIds();
         showToast('Health profile saved successfully!', 'green');
+        
+        // Log audit trail
+        if (typeof AuditLog !== 'undefined') {
+            await AuditLog.log('EMPLOYEE_CREATE', { employeeId: newEmp.id, employeeName: newEmp.name });
+        }
     }
-    saveEmployees(); renderTable(employees); updateStats(); populateConsultEmployeeOptions(); closeModal();
+    await saveEmployees();
+    dispatchDataUpdated();
+    filterData();
+    updateStats();
+    populateConsultEmployeeOptions();
+    closeModal();
 };
 
 function showToast(msg, color = 'green') {
@@ -1407,6 +1548,12 @@ function renderConsultations() {
 const openConsultBtn = document.getElementById('openConsultBtn');
 const consultModal = document.getElementById('consultModal');
 const closeConsultModalBtn = document.getElementById('closeConsultModal');
+const openAppointmentBtn = document.getElementById('openAppointmentBtn');
+const appointmentModal = document.getElementById('appointmentModal');
+const closeAppointmentModalBtn = document.getElementById('closeAppointmentModal');
+const openMedBtn = document.getElementById('openMedBtn');
+const medModal = document.getElementById('medModal');
+const closeMedModalBtn = document.getElementById('closeMedModal');
 const openRxBtn = document.getElementById('openRxBtn');
 const rxModal = document.getElementById('rxModal');
 const closeRxModalBtn = document.getElementById('closeRxModal');
@@ -1417,9 +1564,51 @@ openConsultBtn.onclick = () => {
     updateConsultEmployeeOptions();
     consultModal.style.display = 'block';
 };
-closeConsultModalBtn.onclick = () => { consultModal.style.display = 'none'; };
+if (closeConsultModalBtn) closeConsultModalBtn.onclick = () => { consultModal.style.display = 'none'; };
 
-openRxBtn.onclick = () => {
+if (openAppointmentBtn) openAppointmentBtn.onclick = () => {
+    const searchInput = document.getElementById('appointmentEmployeeSearch');
+    const hiddenId = document.getElementById('appointmentEmployeeId');
+    if (searchInput) searchInput.value = '';
+    if (hiddenId) hiddenId.value = '';
+    const dateField = document.getElementById('appointmentDate');
+    if (dateField) dateField.value = new Date().toISOString().slice(0, 10);
+    const timeField = document.getElementById('appointmentTime');
+    if (timeField) timeField.value = '09:00';
+    const departmentField = document.getElementById('appointmentDepartment');
+    if (departmentField) departmentField.value = 'Health Services';
+    const notesField = document.getElementById('appointmentNotes');
+    if (notesField) notesField.value = '';
+    populateAppointmentEmployeeOptions();
+    renderAppointmentList();
+    const appointmentModalEl = document.getElementById('appointmentModal');
+    if (appointmentModalEl) appointmentModalEl.style.display = 'block';
+};
+
+if (openMedBtn) openMedBtn.onclick = () => {
+    const searchInput = document.getElementById('medEmployeeSearch');
+    const hiddenId = document.getElementById('medEmployeeId');
+    if (searchInput) searchInput.value = '';
+    if (hiddenId) hiddenId.value = '';
+    const medName = document.getElementById('medName');
+    const medDosage = document.getElementById('medDosage');
+    const medFrequency = document.getElementById('medFrequency');
+    const medStartDate = document.getElementById('medStartDate');
+    const medEndDate = document.getElementById('medEndDate');
+    const medNote = document.getElementById('medNote');
+    if (medName) medName.value = '';
+    if (medDosage) medDosage.value = '';
+    if (medFrequency) medFrequency.value = '';
+    if (medStartDate) medStartDate.value = new Date().toISOString().slice(0, 10);
+    if (medEndDate) medEndDate.value = '';
+    if (medNote) medNote.value = '';
+    populateMedEmployeeOptions();
+    renderMedicationList();
+    const medModalEl = document.getElementById('medModal');
+    if (medModalEl) medModalEl.style.display = 'block';
+};
+
+if (openRxBtn) openRxBtn.onclick = () => {
     const searchInput = document.getElementById('rxEmployeeSearch');
     const hiddenId = document.getElementById('rxEmployeeId');
     if (searchInput) searchInput.value = '';
@@ -1444,9 +1633,11 @@ openRxBtn.onclick = () => {
     renderPrescriptionPreview();
     rxModal.style.display = 'block';
 };
-closeRxModalBtn.onclick = () => { rxModal.style.display = 'none'; };
+if (closeAppointmentModalBtn) closeAppointmentModalBtn.onclick = () => { appointmentModal.style.display = 'none'; };
+if (closeMedModalBtn) closeMedModalBtn.onclick = () => { medModal.style.display = 'none'; };
+if (closeRxModalBtn) closeRxModalBtn.onclick = () => { if (rxModal) rxModal.style.display = 'none'; };
 
-printRxBtn.onclick = () => {
+printRxBtn.onclick = async () => {
     // Get prescription data
     const employeeId = document.getElementById('rxEmployeeId').value;
     const consultDateValue = document.getElementById('rxConsultDate').value;
@@ -1481,7 +1672,13 @@ printRxBtn.onclick = () => {
                 employee.consultations[idx].prescriptions = [];
             }
             employee.consultations[idx].prescriptions.push(prescriptionData);
-            saveEmployees();
+            await saveEmployees();
+            
+            // Log audit trail
+            if (typeof AuditLog !== 'undefined') {
+                await AuditLog.log('PRESCRIPTION_CREATE', { employeeId: employeeId, prescribedOn: prescriptionData.prescribedOn });
+            }
+            
             showToast('Prescription saved to consultation!', 'green');
         }
     }
@@ -1510,18 +1707,189 @@ function closeRxModal() {
     if (rxModal) rxModal.style.display = 'none';
 }
 
-function populateRxEmployeeOptions() {
-    const searchInput = document.getElementById('rxEmployeeSearch');
-    const hiddenId = document.getElementById('rxEmployeeId');
-    if (!searchInput || !hiddenId) return;
+function populateAppointmentEmployeeOptions() {
+    const searchInput = document.getElementById('appointmentEmployeeSearch');
+    if (!searchInput) return;
     searchInput.value = '';
-    hiddenId.value = '';
-    searchInput.oninput = () => {
-        updateRxEmployeeOptions();
-        updateRxEmployeeSelection();
+    searchInput.oninput = updateAppointmentEmployeeOptions;
+    searchInput.onchange = updateAppointmentEmployeeSelection;
+    updateAppointmentEmployeeOptions();
+}
+
+function updateAppointmentEmployeeOptions() {
+    const searchInput = document.getElementById('appointmentEmployeeSearch');
+    const dataList = document.getElementById('appointmentEmployeeList');
+    if (!searchInput || !dataList) return;
+    const query = (searchInput.value || '').trim().toLowerCase();
+    const employeesToShow = sortEmployeesByName(employees).filter(emp => {
+        if (!query) return true;
+        return emp.name.toLowerCase().includes(query) || emp.id.toLowerCase().includes(query);
+    });
+    dataList.innerHTML = employeesToShow.map(emp => `<option value="${emp.name} (${emp.id})"></option>`).join('');
+}
+
+function updateAppointmentEmployeeSelection() {
+    const searchInput = document.getElementById('appointmentEmployeeSearch');
+    const hiddenId = document.getElementById('appointmentEmployeeId');
+    if (!searchInput || !hiddenId) return;
+    const exactValue = searchInput.value.trim();
+    const selectedEmployee = employees.find(emp => `${emp.name} (${emp.id})` === exactValue);
+    if (selectedEmployee) {
+        hiddenId.value = selectedEmployee.id;
+        fillAppointmentEmployeeFields(selectedEmployee);
+    } else {
+        hiddenId.value = '';
+    }
+}
+
+function fillAppointmentEmployeeFields(emp) {
+    const departmentInput = document.getElementById('appointmentDepartment');
+    if (departmentInput) departmentInput.value = emp.office || 'Health Services';
+}
+
+function populateMedEmployeeOptions() {
+    const searchInput = document.getElementById('medEmployeeSearch');
+    if (!searchInput) return;
+    searchInput.value = '';
+    searchInput.oninput = updateMedEmployeeOptions;
+    searchInput.onchange = updateMedEmployeeSelection;
+    updateMedEmployeeOptions();
+}
+
+function updateMedEmployeeOptions() {
+    const searchInput = document.getElementById('medEmployeeSearch');
+    const dataList = document.getElementById('medEmployeeList');
+    if (!searchInput || !dataList) return;
+    const query = (searchInput.value || '').trim().toLowerCase();
+    const employeesToShow = sortEmployeesByName(employees).filter(emp => {
+        if (!query) return true;
+        return emp.name.toLowerCase().includes(query) || emp.id.toLowerCase().includes(query);
+    });
+    dataList.innerHTML = employeesToShow.map(emp => `<option value="${emp.name} (${emp.id})"></option>`).join('');
+}
+
+function updateMedEmployeeSelection() {
+    const searchInput = document.getElementById('medEmployeeSearch');
+    const hiddenId = document.getElementById('medEmployeeId');
+    if (!searchInput || !hiddenId) return;
+    const exactValue = searchInput.value.trim();
+    const selectedEmployee = employees.find(emp => `${emp.name} (${emp.id})` === exactValue);
+    if (selectedEmployee) {
+        hiddenId.value = selectedEmployee.id;
+    } else {
+        hiddenId.value = '';
+    }
+}
+
+function renderAppointmentList() {
+    const appointmentList = document.getElementById('appointmentList');
+    if (!appointmentList) return;
+    if (!appointments || !appointments.length) {
+        appointmentList.innerHTML = '<p style="color:#666;">No appointments scheduled.</p>';
+        return;
+    }
+    const items = appointments.slice().sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+    appointmentList.innerHTML = items.map(app => {
+        const employee = employees.find(emp => emp.id === app.employeeId);
+        return `<div class="appointment-item">
+            <strong>${employee ? employee.name : app.employeeId}</strong>
+            <div>${app.date} · ${app.time}</div>
+            <div>${app.department || 'Health Services'}</div>
+            <div>${app.notes || 'No note provided.'}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderMedicationList() {
+    const medicationList = document.getElementById('medicationList');
+    if (!medicationList) return;
+    if (!medications || !medications.length) {
+        medicationList.innerHTML = '<p style="color:#666;">No medication records yet.</p>';
+        return;
+    }
+    const items = medications.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    medicationList.innerHTML = items.map(med => {
+        const employee = employees.find(emp => emp.id === med.employeeId);
+        return `<div class="appointment-item">
+            <strong>${employee ? employee.name : med.employeeId}</strong>
+            <div>${med.medicine} · ${med.dosage} · ${med.frequency}</div>
+            <div>${med.startDate}${med.endDate ? ' – ' + med.endDate : ''}</div>
+            <div>${med.note || 'No note.'}</div>
+        </div>`;
+    }).join('');
+}
+
+function closeAppointmentModal() {
+    if (appointmentModal) appointmentModal.style.display = 'none';
+}
+
+function closeMedModal() {
+    if (medModal) medModal.style.display = 'none';
+}
+
+const appointmentForm = document.getElementById('appointmentForm');
+if (appointmentForm) {
+    appointmentForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const employeeId = document.getElementById('appointmentEmployeeId').value;
+        const employee = employees.find(emp => emp.id === employeeId);
+        if (!employee) {
+            alert('Please select a valid employee for the appointment.');
+            return;
+        }
+        const appointment = {
+            id: `APPT-${Date.now()}`,
+            employeeId,
+            employeeName: employee.name,
+            date: document.getElementById('appointmentDate').value,
+            time: document.getElementById('appointmentTime').value,
+            department: document.getElementById('appointmentDepartment').value,
+            notes: document.getElementById('appointmentNotes').value,
+            createdAt: new Date().toISOString()
+        };
+        appointments.push(appointment);
+        await saveAppointments();
+        renderAppointmentList();
+        dispatchDataUpdated();
+        showToast('Appointment saved successfully!', 'green');
+        closeAppointmentModal();
     };
-    searchInput.onchange = updateRxEmployeeSelection;
-    updateRxEmployeeOptions();
+}
+
+const medicationForm = document.getElementById('medicationForm');
+if (medicationForm) {
+    medicationForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const employeeId = document.getElementById('medEmployeeId').value;
+        const employee = employees.find(emp => emp.id === employeeId);
+        if (!employee) {
+            alert('Please select a valid employee for the medication record.');
+            return;
+        }
+        const medication = {
+            id: `MED-${Date.now()}`,
+            employeeId,
+            employeeName: employee.name,
+            medicine: document.getElementById('medName').value.trim(),
+            dosage: document.getElementById('medDosage').value.trim(),
+            frequency: document.getElementById('medFrequency').value.trim(),
+            startDate: document.getElementById('medStartDate').value,
+            endDate: document.getElementById('medEndDate').value,
+            note: document.getElementById('medNote').value.trim(),
+            createdAt: new Date().toISOString()
+        };
+        medications.push(medication);
+        if (!Array.isArray(employee.currentMedications)) {
+            employee.currentMedications = [];
+        }
+        employee.currentMedications.push(medication);
+        await saveMedications();
+        await saveEmployees();
+        renderMedicationList();
+        dispatchDataUpdated();
+        showToast('Medication record saved!', 'green');
+        closeMedModal();
+    };
 }
 
 function updateRxEmployeeOptions() {
@@ -1688,7 +2056,7 @@ function formatPrescriptionDate(value) {
 
 const consultForm = document.getElementById('consultationForm');
 if (consultForm) {
-    consultForm.onsubmit = (e) => {
+    consultForm.onsubmit = async (e) => {
         e.preventDefault();
         const record = {
             consultCategory: gv('consultCategory'), 
@@ -1712,11 +2080,19 @@ if (consultForm) {
                 bp: record.bp, hr: record.hr, rr: record.rr, temp: record.temp,
                 height: record.height, weight: record.weight, createdAt: new Date().toISOString()
             });
-            saveEmployees();
+            await saveEmployees();
         }
         consultations.unshift(record);
-        saveConsultations(); consultForm.reset();
+        await saveConsultations(); 
+        
+        // Log audit trail
+        if (typeof AuditLog !== 'undefined') {
+            await AuditLog.log('CONSULTATION_CREATE', { employeeId: record.employeeId, date: record.date });
+        }
+        
+        consultForm.reset();
         consultModal.style.display = 'none';
+        dispatchDataUpdated();
         showToast('Consultation saved!', 'green');
     };
 }
@@ -1724,22 +2100,14 @@ if (consultForm) {
 window.onclick = (event) => {
     if (event.target === consultModal) consultModal.style.display = 'none';
     if (event.target === rxModal) rxModal.style.display = 'none';
+    if (event.target === appointmentModal) appointmentModal.style.display = 'none';
+    if (event.target === medModal) medModal.style.display = 'none';
     if (event.target === addModal) addModal.style.display = 'none';
     if (event.target === document.getElementById('viewModal')) document.getElementById('viewModal').style.display = 'none';
     if (event.target === document.getElementById('consultDetailModal')) document.getElementById('consultDetailModal').style.display = 'none';
 };
 
 document.getElementById('printProfileBtn').onclick = () => { window.print(); };
-
-filteredEmployees = employees;
-filterData();
-updateStats();
-populateConsultEmployeeOptions();
-searchInput.onkeyup = filterData;
-officeFilter.onchange = filterData;
-categoryFilter.onchange = filterData;
-occupationFilter.onchange = filterData;
-showStep(0);
 
 // Export Variables
 // Export variables - to be initialized in DOMContentLoaded
@@ -2936,7 +3304,28 @@ function closeExportModal() {
 
 
 // --- INITIALIZATION ---
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    // Clear IndexedDB cache to load fresh data from database
+    try {
+        const db = await dbPromise;
+        const tx = db.transaction('employees', 'readwrite');
+        await tx.objectStore('employees').clear();
+        await tx.done;
+    } catch (err) {
+        console.warn('Could not clear IndexedDB cache', err);
+    }
+    
+    // Load data from IndexedDB
+    employees = await loadEmployees();
+    consultations = await loadConsultations();
+    appointments = await loadAppointments();
+    medications = await loadMedications();
+    
+    // Log app startup
+    if (typeof AuditLog !== 'undefined') {
+        await AuditLog.log('APP_START', { timestamp: new Date().toISOString() });
+    }
+
     // Initialize export variables now that DOM is ready
     exportBtn = document.getElementById('exportBtn');
     exportModal = document.getElementById('exportModal');
@@ -2973,15 +3362,16 @@ window.addEventListener('DOMContentLoaded', () => {
             modified = true;
         }
     });
-    if (modified) saveEmployees();
+    if (modified) await saveEmployees();
 
     populateOfficeFilter();
-    
+
     // Explicitly reset filters to 'All' to show everyone on load
     if (officeFilter) officeFilter.value = 'All';
     if (categoryFilter) categoryFilter.value = 'All';
     if (searchInput) searchInput.value = '';
     
+    filteredEmployees = employees;
     filterData();
     updateStats();
     if (typeof populateConsultEmployeeOptions === 'function') {
@@ -2990,6 +3380,14 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof populateRxEmployeeOptions === 'function') {
         populateRxEmployeeOptions();
     }
+    if (typeof populateAppointmentEmployeeOptions === 'function') {
+        populateAppointmentEmployeeOptions();
+    }
+    if (typeof populateMedEmployeeOptions === 'function') {
+        populateMedEmployeeOptions();
+    }
+    showStep(0);
+    window.dispatchEvent(new Event('dataUpdated'));
 
     if (searchInput) searchInput.addEventListener('input', filterData);
     if (officeFilter) officeFilter.addEventListener('change', filterData);

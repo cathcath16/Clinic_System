@@ -6,11 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NBSC Clinic System</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme-enhancements.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -25,8 +28,17 @@
                 <small>Employee Health Profile — FM-NBSC-HSO-001</small>
             </div>
         </div>
+        <nav class="header-nav">
+            <button id="toggleDarkMode" class="nav-btn" title="Toggle dark mode (D)"><i class="fas fa-moon"></i></button>
+            <button id="toggleNav" class="nav-btn" title="Toggle menu"><i class="fas fa-bars"></i></button>
+        </nav>
         <div class="header-right">
             <span id="stats-summary">Total: <span id="total-count">200</span> Employees</span>
+            <select id="roleSelect" class="role-selector">
+                <option value="admin">Admin View</option>
+                <option value="doctor">Doctor</option>
+                <option value="nurse">Nurse</option>
+            </select>
         </div>
     </header>
 
@@ -55,6 +67,55 @@
             <small class="class-names" id="names-contract">Aquino, Rhea</small>
         </div>
     </div>
+
+    <!-- Health Overview Section -->
+    <div class="health-overview-section" id="healthOverviewSection">
+        <h3><i class="fas fa-heartbeat"></i> Health Overview</h3>
+        <div class="health-overview-grid">
+            <div class="health-stat-card">
+                <div class="stat-icon" style="background: #fee2e2;"><i class="fas fa-exclamation-circle" style="color: #dc2626;"></i></div>
+                <div class="stat-info">
+                    <h4 id="alertCount">0</h4>
+                    <p>Health Alerts</p>
+                </div>
+            </div>
+            <div class="health-stat-card">
+                <div class="stat-icon" style="background: #fef3c7;"><i class="fas fa-calendar-check" style="color: #d97706;"></i></div>
+                <div class="stat-info">
+                    <h4 id="appointmentCount">0</h4>
+                    <p>Due Checkups</p>
+                </div>
+            </div>
+            <div class="health-stat-card">
+                <div class="stat-icon" style="background: #dbeafe;"><i class="fas fa-pills" style="color: #0284c7;"></i></div>
+                <div class="stat-info">
+                    <h4 id="medicationCount">0</h4>
+                    <p>On Medications</p>
+                </div>
+            </div>
+            <div class="health-stat-card">
+                <div class="stat-icon" style="background: #dcfce7;"><i class="fas fa-check-circle" style="color: #16a34a;"></i></div>
+                <div class="stat-info">
+                    <h4 id="healthyCount">0</h4>
+                    <p>Healthy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Sidebar -->
+    <aside class="quick-access-sidebar" id="quickAccessSidebar">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        <button class="quick-action-btn" id="quickAddBtn"><i class="fas fa-user-plus"></i> New Profile</button>
+        <button class="quick-action-btn" id="quickConsultBtn"><i class="fas fa-file-medical"></i> Consultation</button>
+        <button class="quick-action-btn" id="quickAppointmentBtn"><i class="fas fa-calendar-alt"></i> Appointment</button>
+        <button class="quick-action-btn" id="quickPrescriptionBtn"><i class="fas fa-prescription"></i> Prescription</button>
+        <button class="quick-action-btn" id="quickMedicationBtn"><i class="fas fa-pills"></i> Medication</button>
+        <button class="quick-action-btn" id="quickReportBtn"><i class="fas fa-chart-bar"></i> Report</button>
+        <hr>
+        <h4>Recent Records</h4>
+        <div id="recentEmployeesList" class="recent-list"></div>
+    </aside>
 
     <div class="dual-container">
         <div class="table-container">
@@ -136,8 +197,10 @@
                 <button id="addNewBtn" class="add-btn"><i class="fas fa-plus"></i> Add New Profile</button>
                 <button id="openConsultBtn" class="add-btn"><i class="fas fa-notes-medical"></i> Consultation
                     Form</button>
+                <button id="openAppointmentBtn" class="add-btn"><i class="fas fa-calendar-alt"></i> Appointment</button>
                 <button id="openRxBtn" class="add-btn"><i class="fas fa-prescription-bottle-alt"></i> Add
                     Prescription</button>
+                <button id="openMedBtn" class="add-btn"><i class="fas fa-pills"></i> Medication</button>
 
                 <button id="exportBtn" class="add-btn">
                     <i class="fas fa-file-export"></i> Export
@@ -1608,6 +1671,110 @@
         </div>
     </div>
 
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content wide-modal">
+            <div class="modal-header">
+                <h3>Schedule Appointment</h3>
+                <span class="close" id="closeAppointmentModal">&times;</span>
+            </div>
+            <div class="form-container">
+                <form id="appointmentForm">
+                    <div class="consult-grid">
+                        <div class="input-group">
+                            <label>Employee</label>
+                            <div class="select-search-group">
+                                <input type="search" id="appointmentEmployeeSearch" placeholder="Search employee..."
+                                    list="appointmentEmployeeList" autocomplete="off">
+                                <datalist id="appointmentEmployeeList"></datalist>
+                                <input type="hidden" id="appointmentEmployeeId">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Date</label>
+                            <input type="date" id="appointmentDate" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Time</label>
+                            <input type="time" id="appointmentTime" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Department</label>
+                            <input type="text" id="appointmentDepartment" placeholder="Health Services" required>
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Reason / Notes</label>
+                            <textarea id="appointmentNotes" rows="3" placeholder="Reason for appointment"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" onclick="closeAppointmentModal()">Close</button>
+                        <button type="submit" class="save-btn">Save Appointment</button>
+                    </div>
+                </form>
+                <div class="modal-section" style="margin-top:20px;">
+                    <h4>Upcoming Appointments</h4>
+                    <div id="appointmentList" class="appointment-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="medModal" class="modal">
+        <div class="modal-content wide-modal">
+            <div class="modal-header">
+                <h3>Medication Tracker</h3>
+                <span class="close" id="closeMedModal">&times;</span>
+            </div>
+            <div class="form-container">
+                <form id="medicationForm">
+                    <div class="consult-grid">
+                        <div class="input-group">
+                            <label>Employee</label>
+                            <div class="select-search-group">
+                                <input type="search" id="medEmployeeSearch" placeholder="Search employee..."
+                                    list="medEmployeeList" autocomplete="off">
+                                <datalist id="medEmployeeList"></datalist>
+                                <input type="hidden" id="medEmployeeId">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Medicine</label>
+                            <input type="text" id="medName" placeholder="Medicine name" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Dosage</label>
+                            <input type="text" id="medDosage" placeholder="e.g. 500mg, 1 tablet" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Frequency</label>
+                            <input type="text" id="medFrequency" placeholder="e.g. once daily" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Start Date</label>
+                            <input type="date" id="medStartDate" required>
+                        </div>
+                        <div class="input-group">
+                            <label>End Date</label>
+                            <input type="date" id="medEndDate">
+                        </div>
+                        <div class="input-group full-width">
+                            <label>Notes</label>
+                            <textarea id="medNote" rows="3" placeholder="Medication instructions or observations"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" onclick="closeMedModal()">Close</button>
+                        <button type="submit" class="save-btn">Save Medication</button>
+                    </div>
+                </form>
+                <div class="modal-section" style="margin-top:20px;">
+                    <h4>Medication Records</h4>
+                    <div id="medicationList" class="appointment-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="consultDetailModal" class="modal">
         <div class="modal-content wide-modal">
             <div class="modal-header">
@@ -1665,6 +1832,7 @@
         </div>
     </div>
 
+    <script src="features.js"></script>
     <script src="script.js"></script>
 </body>
 

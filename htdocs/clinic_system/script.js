@@ -49,10 +49,23 @@ function generateSampleEmployees(count = 200) {
     return sample;
 }
 
+function isValidEmployee(emp) {
+    if (!emp || typeof emp !== 'object') return false;
+    const id = String(emp.id || '').trim();
+    const name = String(emp.name || '').trim();
+    const age = Number(emp.age);
+    return id !== '' && id !== '0' && name !== '' && name !== '0' && !Number.isNaN(age) && age !== 0;
+}
+
 function loadEmployees() {
     try {
         const ds = localStorage.getItem('employees');
-        if (ds) { const p = JSON.parse(ds); if (Array.isArray(p) && p.length) return p; }
+        if (ds) {
+            const p = JSON.parse(ds);
+            if (Array.isArray(p)) {
+                return p.filter(isValidEmployee);
+            }
+        }
     } catch (err) { console.warn('Failed to load employees', err); }
     return generateSampleEmployees(200);
 }
@@ -260,7 +273,7 @@ document.getElementById('undoBtn').onclick = () => {
     if (!lastDeleted) return;
     employees.splice(lastDeleted.index, 0, lastDeleted.record);
     normalizeEmployeeIds();
-    saveEmployees(); renderTable(employees); updateStats(); populateConsultEmployeeOptions(); hideUndoBar();
+    saveEmployees(); filterData(); updateStats(); populateConsultEmployeeOptions(); hideUndoBar();
 };
 
 function deleteEmployee(id) {
@@ -272,7 +285,7 @@ function deleteEmployee(id) {
     normalizeEmployeeIds();
     saveEmployees();
     saveConsultations();
-    renderTable(employees);
+    filterData();
     updateStats();
     populateConsultEmployeeOptions();
     showUndoBar();
@@ -565,7 +578,7 @@ addForm.onsubmit = (e) => {
         normalizeEmployeeIds();
         showToast('Health profile saved successfully!', 'green');
     }
-    saveEmployees(); renderTable(employees); updateStats(); populateConsultEmployeeOptions(); closeModal();
+    saveEmployees(); filterData(); updateStats(); populateConsultEmployeeOptions(); closeModal();
 };
 
 function showToast(msg, color = 'green') {
