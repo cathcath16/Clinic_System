@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -25,81 +25,44 @@
             <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="logo" width="40">
             <div>
                 <h2>NBSC School Clinic</h2>
-                <small>Employee Health Profile — FM-NBSC-HSO-001</small>
+                <small>Employee Health Profile  FM-NBSC-HSO-001</small>
             </div>
         </div>
-        <nav class="header-nav">
+        <div class="header-right">
+            <span id="stats-summary">Total: <span id="total-count">0</span> Employees</span>
             <button id="toggleDarkMode" class="nav-btn" title="Toggle dark mode (D)"><i class="fas fa-moon"></i></button>
             <button id="toggleNav" class="nav-btn" title="Toggle menu"><i class="fas fa-bars"></i></button>
-        </nav>
-        <div class="header-right">
-            <span id="stats-summary">Total: <span id="total-count">200</span> Employees</span>
-            <select id="roleSelect" class="role-selector">
-                <option value="admin">Admin View</option>
-                <option value="doctor">Doctor</option>
-                <option value="nurse">Nurse</option>
-            </select>
         </div>
     </header>
 
     <div class="cards">
-        <div class="card blue">
+        <div class="card blue clickable" data-category="All">
             <i class="fas fa-users"></i>
-            <h1 id="count-total">200</h1>
-            <p>Total Employees</p>
+            <h1 id="count-total">0</h1>
+            <p>All Employees</p>
+            <small class="class-names" id="names-total">Click to show all employees alphabetically</small>
+            <div class="card-tooltip hidden"></div>
         </div>
-        <div class="card green">
+        <div class="card green clickable" data-category="Regular">
             <i class="fas fa-check-square"></i>
-            <h1 id="count-regular">163</h1>
+            <h1 id="count-regular">0</h1>
             <p>Regular</p>
-            <small class="class-names" id="names-regular">Mendoza, Daniel; Lopez, Emmanuel</small>
+            <small class="class-names" id="names-regular">(none)</small>
+            <div class="card-tooltip hidden"></div>
         </div>
-        <div class="card yellow">
+        <div class="card yellow clickable" data-category="Job Order">
             <i class="fas fa-exclamation-triangle"></i>
-            <h1 id="count-joborder">24</h1>
+            <h1 id="count-joborder">0</h1>
             <p>Job Order</p>
             <small class="class-names" id="names-joborder">(none)</small>
+            <div class="card-tooltip hidden"></div>
         </div>
-        <div class="card red">
+        <div class="card red clickable" data-category="Contract of Service">
             <i class="fas fa-circle"></i>
-            <h1 id="count-contract">13</h1>
+            <h1 id="count-contract">0</h1>
             <p>Contract of Service</p>
-            <small class="class-names" id="names-contract">Aquino, Rhea</small>
-        </div>
-    </div>
-
-    <!-- Health Overview Section -->
-    <div class="health-overview-section" id="healthOverviewSection">
-        <h3><i class="fas fa-heartbeat"></i> Health Overview</h3>
-        <div class="health-overview-grid">
-            <div class="health-stat-card">
-                <div class="stat-icon" style="background: #fee2e2;"><i class="fas fa-exclamation-circle" style="color: #dc2626;"></i></div>
-                <div class="stat-info">
-                    <h4 id="alertCount">0</h4>
-                    <p>Health Alerts</p>
-                </div>
-            </div>
-            <div class="health-stat-card">
-                <div class="stat-icon" style="background: #fef3c7;"><i class="fas fa-calendar-check" style="color: #d97706;"></i></div>
-                <div class="stat-info">
-                    <h4 id="appointmentCount">0</h4>
-                    <p>Due Checkups</p>
-                </div>
-            </div>
-            <div class="health-stat-card">
-                <div class="stat-icon" style="background: #dbeafe;"><i class="fas fa-pills" style="color: #0284c7;"></i></div>
-                <div class="stat-info">
-                    <h4 id="medicationCount">0</h4>
-                    <p>On Medications</p>
-                </div>
-            </div>
-            <div class="health-stat-card">
-                <div class="stat-icon" style="background: #dcfce7;"><i class="fas fa-check-circle" style="color: #16a34a;"></i></div>
-                <div class="stat-info">
-                    <h4 id="healthyCount">0</h4>
-                    <p>Healthy</p>
-                </div>
-            </div>
+            <small class="class-names" id="names-contract">(none)</small>
+            <div class="card-tooltip hidden"></div>
         </div>
     </div>
 
@@ -108,10 +71,8 @@
         <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
         <button class="quick-action-btn" id="quickAddBtn"><i class="fas fa-user-plus"></i> New Profile</button>
         <button class="quick-action-btn" id="quickConsultBtn"><i class="fas fa-file-medical"></i> Consultation</button>
-        <button class="quick-action-btn" id="quickAppointmentBtn"><i class="fas fa-calendar-alt"></i> Appointment</button>
         <button class="quick-action-btn" id="quickPrescriptionBtn"><i class="fas fa-prescription"></i> Prescription</button>
-        <button class="quick-action-btn" id="quickMedicationBtn"><i class="fas fa-pills"></i> Medication</button>
-        <button class="quick-action-btn" id="quickReportBtn"><i class="fas fa-chart-bar"></i> Report</button>
+        <button class="quick-action-btn" id="quickExportBtn"><i class="fas fa-file-export"></i> Export</button>
         <hr>
         <h4>Recent Records</h4>
         <div id="recentEmployeesList" class="recent-list"></div>
@@ -127,85 +88,8 @@
                 <div class="filter-search">
                     <select id="officeFilter">
                         <option value="All">All Offices</option>
-                        <option value="Office of the College President">Office of the College President</option>
-                        <option value="Human Resource Management and Development Office">Human Resource Management and
-                            Development Office</option>
-                        <option value="Legal Office">Legal Office</option>
-                        <option value="Project Management and Monitoring Office">Project Management and Monitoring Office
-                        </option>
-                        <option value="Planning Development Office">Planning Development Office</option>
-                        <option value="Office of the Vice President for Administration and Finance">Office of the Vice
-                            President for Administration and Finance</option>
-                        <option value="Office of the Vice President for Academic Affairs">Office of the Vice President for
-                            Academic Affairs</option>
-                        <option value="Learning Resource Center">Learning Resource Center</option>
-                        <option value="Health Services Office">Health Services Office</option>
-                        <option value="Registar and Record Office">Registar and Record Office</option>
-                        <option value="Student Affairs, Services, and Development Division">Student Affairs, Services, and
-                            Development Division</option>
-                        <option value="Quality Assurance Office">Quality Assurance Office</option>
-                        <option value="Student Discipline Office">Student Discipline Office</option>
-                        <option value="Guidance and Counseling Office">Guidance and Counseling Office</option>
-                        <option value="Income Generation Program Office">Income Generation Program Office</option>
-                        <option value="Research Development and Innovation Division">Research Development and Innovation
-                            Division</option>
-                        <option value="Community Extension Services Division">Community Extension Services Division</option>
-                        <option value="International Affairs and External Linkages Office">International Affairs and
-                            External Linkages Office</option>
-                        <option value="Appraisal, Testing, and Admission Office">Appraisal, Testing, and Admission Office
-                        </option>
-                        <option value="Student Accounts, Scholarship Aides, and Financial Assitance Office">Student
-                            Accounts, Scholarship Aides, and Financial Assitance Office</option>
-                        <option value="Culture and Arts Development Office">Culture and Arts Development Office</option>
-                        <option value="Pathfit/Sports Development Office">Pathfit/Sports Development Office</option>
-                        <option value="National Service training Program Office/ Campus Safety Management Office">National
-                            Service training Program Office/ Campus Safety Management Office</option>
-                        <option value="Public affairs and Information Office">Public affairs and Information Office</option>
-                        <option value="Office of the College and Board Secretary">Office of the College and Board Secretary
-                        </option>
-                        <option value="Curriculum And Instruction Division/Kalampusan Office">Curriculum And Instruction
-                            Division/Kalampusan Office</option>
-                        <option value="Research Ethics Office">Research Ethics Office</option>
-                        <option value="Internal Audit Office">Internal Audit Office</option>
-                        <option value="Information and Communication Technology Management Office">Information and
-                            Communication Technology Management Office</option>
-                        <option value="Gender and Development Office">Gender and Development Office</option>
-                        <option value="Records and Archival Office">Records and Archival Office</option>
-                        <option value="Supply and Property Management Office">Supply and Property Management Office</option>
-                        <option value="Commision and Audit Office">Commision and Audit Office</option>
-                        <option value="Accounting Office">Accounting Office</option>
-                        <option value="Budget Office">Budget Office</option>
-                        <option value="Cashiering Office">Cashiering Office</option>
-                        <option value="Events Management Office">Events Management Office</option>
-                        <option value="Procurement Management Office">Procurement Management Office</option>
-                        <option value="General Services Office">General Services Office</option>
-                        <option value="Institute for Teacher Education">Institute for Teacher Education</option>
-                        <option value="Department of General Education Curricula">Department of General Education Curricula
-                        </option>
-                        <option value="Institute for Computer Studies">Institute for Computer Studies</option>
-                        <option value="Institute for Business Management">Institute for Business Management</option>
                     </select>
                 </div>
-                <div class="filter-search">
-                    <select id="categoryFilter">
-                        <option value="All">All</option>
-                        <option value="Regular">Regular</option>
-                        <option value="Job Order">Job Order</option>
-                        <option value="Contract of Service">Contract of Service</option>
-                    </select>
-                </div>
-                <button id="addNewBtn" class="add-btn"><i class="fas fa-plus"></i> Add New Profile</button>
-                <button id="openConsultBtn" class="add-btn"><i class="fas fa-notes-medical"></i> Consultation
-                    Form</button>
-                <button id="openAppointmentBtn" class="add-btn"><i class="fas fa-calendar-alt"></i> Appointment</button>
-                <button id="openRxBtn" class="add-btn"><i class="fas fa-prescription-bottle-alt"></i> Add
-                    Prescription</button>
-                <button id="openMedBtn" class="add-btn"><i class="fas fa-pills"></i> Medication</button>
-
-                <button id="exportBtn" class="add-btn">
-                    <i class="fas fa-file-export"></i> Export
-                </button>
-
             </div>
 
             <table id="employeeTable">
@@ -1525,8 +1409,8 @@
                 </div><!-- end form-container -->
 
                 <div class="modal-footer">
-                    <button id="prevBtn" type="button" class="cancel-btn" onclick="changeStep(-1)">← Previous</button>
-                    <button id="nextBtn" type="button" class="save-btn" onclick="changeStep(1)">Next →</button>
+                    <button id="prevBtn" type="button" class="cancel-btn" onclick="changeStep(-1)">â† Previous</button>
+                    <button id="nextBtn" type="button" class="save-btn" onclick="changeStep(1)">Next </button>
                     <button id="submitBtn" type="submit" class="save-btn" style="display:none;">Save Health
                         Profile</button>
                     <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
@@ -1535,37 +1419,6 @@
         </div>
     </div>
 
-
-    <div id="viewModal" class="modal">
-        <div class="modal-content wide-modal">
-            <div class="modal-header">
-                <h3>Employee Profile</h3>
-                <span class="close" onclick="closeViewModal()">&times;</span>
-            </div>
-            <div class="form-container" style="padding: 20px;">
-                <!-- Toggle Buttons -->
-                <div
-                    style="display: flex; gap: 12px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #e0e7ff;">
-                    <button id="basicViewBtn" class="toggle-btn active" onclick="toggleView('basic')">
-                        Basic Info
-                    </button>
-                    <button id="fullViewBtn" class="toggle-btn" onclick="toggleView('full')">
-                        Full Health Profile
-                    </button>
-                </div>
-
-                <!-- Basic View -->
-                <div id="basicViewContent" class="view-content active"></div>
-
-                <!-- Full Profile View -->
-                <div id="fullViewContent" class="view-content" style="display: none;"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="cancel-btn" onclick="closeViewModal()">Close</button>
-                <button type="button" class="save-btn" id="printProfileBtn">Save</button>
-            </div>
-        </div>
-    </div>
 
     <div id="rxModal" class="modal">
         <div class="modal-content wide-modal">
@@ -1667,123 +1520,6 @@
                         <button type="button" class="save-btn" id="printRxBtn">Save Prescription</button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <div id="appointmentModal" class="modal">
-        <div class="modal-content wide-modal">
-            <div class="modal-header">
-                <h3>Schedule Appointment</h3>
-                <span class="close" id="closeAppointmentModal">&times;</span>
-            </div>
-            <div class="form-container">
-                <form id="appointmentForm">
-                    <div class="consult-grid">
-                        <div class="input-group">
-                            <label>Employee</label>
-                            <div class="select-search-group">
-                                <input type="search" id="appointmentEmployeeSearch" placeholder="Search employee..."
-                                    list="appointmentEmployeeList" autocomplete="off">
-                                <datalist id="appointmentEmployeeList"></datalist>
-                                <input type="hidden" id="appointmentEmployeeId">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Date</label>
-                            <input type="date" id="appointmentDate" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Time</label>
-                            <input type="time" id="appointmentTime" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Department</label>
-                            <input type="text" id="appointmentDepartment" placeholder="Health Services" required>
-                        </div>
-                        <div class="input-group full-width">
-                            <label>Reason / Notes</label>
-                            <textarea id="appointmentNotes" rows="3" placeholder="Reason for appointment"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="cancel-btn" onclick="closeAppointmentModal()">Close</button>
-                        <button type="submit" class="save-btn">Save Appointment</button>
-                    </div>
-                </form>
-                <div class="modal-section" style="margin-top:20px;">
-                    <h4>Upcoming Appointments</h4>
-                    <div id="appointmentList" class="appointment-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="medModal" class="modal">
-        <div class="modal-content wide-modal">
-            <div class="modal-header">
-                <h3>Medication Tracker</h3>
-                <span class="close" id="closeMedModal">&times;</span>
-            </div>
-            <div class="form-container">
-                <form id="medicationForm">
-                    <div class="consult-grid">
-                        <div class="input-group">
-                            <label>Employee</label>
-                            <div class="select-search-group">
-                                <input type="search" id="medEmployeeSearch" placeholder="Search employee..."
-                                    list="medEmployeeList" autocomplete="off">
-                                <datalist id="medEmployeeList"></datalist>
-                                <input type="hidden" id="medEmployeeId">
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Medicine</label>
-                            <input type="text" id="medName" placeholder="Medicine name" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Dosage</label>
-                            <input type="text" id="medDosage" placeholder="e.g. 500mg, 1 tablet" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Frequency</label>
-                            <input type="text" id="medFrequency" placeholder="e.g. once daily" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Start Date</label>
-                            <input type="date" id="medStartDate" required>
-                        </div>
-                        <div class="input-group">
-                            <label>End Date</label>
-                            <input type="date" id="medEndDate">
-                        </div>
-                        <div class="input-group full-width">
-                            <label>Notes</label>
-                            <textarea id="medNote" rows="3" placeholder="Medication instructions or observations"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="cancel-btn" onclick="closeMedModal()">Close</button>
-                        <button type="submit" class="save-btn">Save Medication</button>
-                    </div>
-                </form>
-                <div class="modal-section" style="margin-top:20px;">
-                    <h4>Medication Records</h4>
-                    <div id="medicationList" class="appointment-list"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="consultDetailModal" class="modal">
-        <div class="modal-content wide-modal">
-            <div class="modal-header">
-                <h3>Consultation Details</h3>
-                <span class="close" onclick="closeConsultDetailModal()">&times;</span>
-            </div>
-            <div class="form-container" style="padding:20px;" id="consultDetailContent"></div>
-            <div class="modal-footer">
-                <button type="button" class="cancel-btn" onclick="closeConsultDetailModal()">Close</button>
             </div>
         </div>
     </div>

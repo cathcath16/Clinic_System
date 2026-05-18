@@ -40,36 +40,13 @@ function initQuickAccess() {
         }
     });
 
-    // Quick action buttons
-    document.getElementById('quickAddBtn').onclick = () => {
-        document.getElementById('addNewBtn').click();
-        sidebar.classList.remove('open');
-    };
-
-    document.getElementById('quickConsultBtn').onclick = () => {
-        document.getElementById('openConsultBtn').click();
-        sidebar.classList.remove('open');
-    };
-
-    document.getElementById('quickAppointmentBtn').onclick = () => {
-        document.getElementById('openAppointmentBtn').click();
-        sidebar.classList.remove('open');
-    };
-
-    document.getElementById('quickPrescriptionBtn').onclick = () => {
-        document.getElementById('openRxBtn').click();
-        sidebar.classList.remove('open');
-    };
-
-    document.getElementById('quickMedicationBtn').onclick = () => {
-        document.getElementById('openMedBtn').click();
-        sidebar.classList.remove('open');
-    };
-
-    document.getElementById('quickReportBtn').onclick = () => {
-        showHealthReport();
-        sidebar.classList.remove('open');
-    };
+    const quickButtonIds = ['quickAddBtn', 'quickConsultBtn', 'quickPrescriptionBtn', 'quickExportBtn'];
+    quickButtonIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => sidebar.classList.remove('open'));
+        }
+    });
 }
 
 // Calculate Health Statistics
@@ -118,10 +95,14 @@ function updateHealthStatistics() {
     });
 
     // Update UI
-    document.getElementById('alertCount').textContent = stats.alerts;
-    document.getElementById('appointmentCount').textContent = stats.appointments;
-    document.getElementById('medicationCount').textContent = stats.medications;
-    document.getElementById('healthyCount').textContent = stats.healthy;
+    const alertCountElem = document.getElementById('alertCount');
+    const appointmentCountElem = document.getElementById('appointmentCount');
+    const medicationCountElem = document.getElementById('medicationCount');
+    const healthyCountElem = document.getElementById('healthyCount');
+    if (alertCountElem) alertCountElem.textContent = stats.alerts;
+    if (appointmentCountElem) appointmentCountElem.textContent = stats.appointments;
+    if (medicationCountElem) medicationCountElem.textContent = stats.medications;
+    if (healthyCountElem) healthyCountElem.textContent = stats.healthy;
 
     // Update recent employees list
     updateRecentEmployeesList();
@@ -140,37 +121,11 @@ function updateRecentEmployeesList() {
     `).join('');
 }
 
-// Role-Based Access Control
-function initRoleBasedAccess() {
-    const roleSelect = document.getElementById('roleSelect');
-    const savedRole = localStorage.getItem('userRole') || 'admin';
-    
-    roleSelect.value = savedRole;
-    applyRoleBasedAccess(savedRole);
-    
-    roleSelect.addEventListener('change', (e) => {
-        localStorage.setItem('userRole', e.target.value);
-        applyRoleBasedAccess(e.target.value);
-    });
-}
-
-function applyRoleBasedAccess(role) {
-    const adminElements = document.querySelectorAll('[data-role="admin"]');
-    const doctorElements = document.querySelectorAll('[data-role="doctor"]');
-    const nurseElements = document.querySelectorAll('[data-role="nurse"]');
-    
-    adminElements.forEach(el => el.style.display = role === 'admin' ? 'block' : 'none');
-    doctorElements.forEach(el => el.style.display = (role === 'admin' || role === 'doctor') ? 'block' : 'none');
-    nurseElements.forEach(el => el.style.display = role !== '' ? 'block' : 'none');
-}
-
 // Keyboard Shortcuts
 function initKeyboardShortcuts() {
     const shortcuts = [
         { key: 'N', description: 'New Profile', action: () => document.getElementById('addNewBtn').click() },
         { key: 'C', description: 'Consultation Form', action: () => document.getElementById('openConsultBtn').click() },
-        { key: 'A', description: 'Appointment', action: () => document.getElementById('openAppointmentBtn').click() },
-        { key: 'M', description: 'Medication', action: () => document.getElementById('openMedBtn').click() },
         { key: 'P', description: 'Prescription', action: () => document.getElementById('openRxBtn').click() },
         { key: 'E', description: 'Export', action: () => document.getElementById('exportBtn').click() },
         { key: 'S', description: 'Save', action: saveCurrentForm },
@@ -460,7 +415,6 @@ function initializeAllFeatures() {
     // Phase 1
     initDarkMode();
     initQuickAccess();
-    initRoleBasedAccess();
     initKeyboardShortcuts();
     updateHealthStatistics();
     
@@ -472,9 +426,9 @@ function initializeAllFeatures() {
     window.addEventListener('dataUpdated', updateHealthStatistics);
 }
 
-// Call initialization when DOM is ready
+// Call initialization when DOM is ready and after later scripts load
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeAllFeatures);
 } else {
-    initializeAllFeatures();
+    setTimeout(initializeAllFeatures, 0);
 }

@@ -90,6 +90,7 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.card.clickable { cursor: pointer; }
 .card:hover {
     transform: translateY(-5px);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -98,6 +99,36 @@ body {
 .card h1 { margin: 5px 0; font-size: 2.2rem; color: #1f3a6d; }
 .card p  { margin: 0; color: var(--text-gray); font-weight: 500; }
 .card .class-names { display: block; font-size: 0.72rem; color: #888; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.card-tooltip {
+    display: none;
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: calc(100% + 10px);
+    z-index: 50;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+    padding: 12px 14px;
+    font-size: 0.78rem;
+    color: #334155;
+    max-height: 180px;
+    overflow: auto;
+    line-height: 1.4;
+}
+.card-tooltip.visible {
+    display: block;
+}
+.card-tooltip strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+.card-tooltip span {
+    display: block;
+    margin-bottom: 4px;
+}
 
 .card.blue   { border-top-color: #1e40af; }
 .card.green  { border-top-color: #15803d; }
@@ -254,12 +285,16 @@ tr:hover td {
 }
 
 select {
-    padding: 6px 8px;
-    border-radius: 4px;
+    padding: 8px 10px;
+    border-radius: 6px;
     border: 1px solid #ddd;
     background: #f9f9f9;
-    font-size: 0.75rem;
-    min-width: 70px;
+    font-size: 0.85rem;
+    min-width: 90px;
+}
+
+.filter-search select {
+    min-width: 200px;
 }
 
 /* Filter Search Container */
@@ -267,6 +302,7 @@ select {
     position: relative;
     display: flex;
     align-items: center;
+    gap: 10px;
 }
 
 /* I-replace ang .add-btn block nimo ani */
@@ -943,8 +979,6 @@ tbody tr { background: transparent !important; }
     html, body { width: 100%; height: 100%; margin: 0; padding: 0; }
     body * { visibility: hidden; }
     #rxPrintArea.print-active, #rxPrintArea.print-active * { visibility: visible; }
-    #viewModal, #viewModal * { visibility: visible; }
-    #consultDetailModal, #consultDetailModal * { visibility: visible; }
     #rxPrintArea.print-active {
         display: block;
         position: absolute;
@@ -955,20 +989,7 @@ tbody tr { background: transparent !important; }
         margin: 0;
         background: white;
     }
-    #consultDetailModal {
-        position: static;
-        display: block !important;
-        background: white;
-        width: 100%;
-        height: auto;
-        padding: 20mm;
-        box-shadow: none;
-    }
-    #consultDetailModal .modal-header {
-        display: none;
-    }
     #rxModal, #importModal, #addModal, #consultModal { visibility: hidden; }
-    #viewModal .modal-header, #viewModal .modal-footer { display: none; }
     .step-indicator { display: none; }
 }
 
@@ -1156,7 +1177,6 @@ tbody tr { background: transparent !important; }
 
 @media print {
     body * { visibility: hidden; }
-    #viewModal, #viewModal * { visibility: visible; }
     .prescription-print-area {
         display: block !important;
         visibility: visible;
@@ -1183,7 +1203,7 @@ tbody tr { background: transparent !important; }
     .prescription-page::before {
         display: none;
     }
-    #rxModal, #viewModal, #importModal, #addModal, #consultModal, #consultDetailModal { visibility: hidden; }
+    #rxModal, #importModal, #addModal, #consultModal { visibility: hidden; }
 }
 
 .prescription-top {

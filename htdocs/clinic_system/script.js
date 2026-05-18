@@ -1,11 +1,11 @@
 const tableBody = document.getElementById("tableBody");
 const searchInput = document.getElementById("searchInput");
 const officeFilter = document.getElementById("officeFilter");
-const categoryFilter = document.getElementById("categoryFilter");
 const occupationFilter = document.getElementById("occupationFilter");
 const addModal = document.getElementById("addModal");
 const addNewBtn = document.getElementById("addNewBtn");
 const addForm = document.getElementById("addForm");
+let selectedCategoryFilter = 'All';
 
 function generateSampleEmployees(count = 200) {
     const lastNames  = ['Aguirre','Bautista','Cruz','Dela Cruz','Enriquez','Flores','Garcia','Herrera','Ibarra','Jimenez','Lopez','Martinez','Nunez','Ortega','Perez','Quinto','Reyes','Santos','Torres','Urbano','Velasco','Wang','Xavier','Yap','Zamora'];
@@ -229,8 +229,8 @@ function populateOccupationFilter() {
 function filterData() {
     const text = searchInput.value.toLowerCase();
     const officeFilterVal = officeFilter.value;
-    const categoryFilterVal = categoryFilter.value;
     const occupationFilterVal = occupationFilter.value;
+    const categoryFilterVal = selectedCategoryFilter;
     filteredEmployees = sortEmployeesByName(employees.filter(emp => {
         const matchesText = [emp.name, emp.id, emp.contact, emp.religion, emp.occupation, emp.civilStatus, emp.office, emp.category]
             .some(v => (v || '').toLowerCase().includes(text));
@@ -2088,7 +2088,6 @@ updateStats();
 populateConsultEmployeeOptions();
 searchInput.onkeyup = filterData;
 officeFilter.onchange = filterData;
-categoryFilter.onchange = filterData;
 occupationFilter.onchange = filterData;
 showStep(0);
 
